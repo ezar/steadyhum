@@ -20,7 +20,18 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
-      - run: pnpm build
+      - name: Fetch the models
+        # verify:build asserts they are in dist, so the build has to have them.
+        run: pnpm models:fetch
+      - name: Build and verify under a subpath
+        # The deploy workflow builds under /<repo>/. Exercising that here means a
+        # base-path regression fails on the pull request rather than on a push to
+        # main, after it is too late to review.
+        run: BASE_PATH=/steadyhum/ pnpm build && pnpm verify:build /steadyhum/
+      - name: Build and verify at the site root
+        # Last on purpose, so the job leaves dist/ in the shape anything running
+        # afterwards expects. A subpath dist/ served at the root is a blank page.
+        run: pnpm build && pnpm verify:build /
 
   e2e:
     runs-on: ubuntu-latest

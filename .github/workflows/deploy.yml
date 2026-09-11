@@ -40,6 +40,13 @@ jobs:
         run: pnpm build
         env:
           BASE_PATH: ${{ steps.pages.outputs.base_path && format('{0}/', steps.pages.outputs.base_path) || '/' }}
+      - name: Verify the build is deployable at the Pages base path
+        # A wrong base path publishes a blank page with every step green: the
+        # assets 404 and nothing upstream looks at the HTML. This resolves each
+        # reference the way a browser would and fails if the file is not there.
+        run: pnpm verify:build
+        env:
+          BASE_PATH: ${{ steps.pages.outputs.base_path && format('{0}/', steps.pages.outputs.base_path) || '/' }}
       - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
