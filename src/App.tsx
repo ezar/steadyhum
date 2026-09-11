@@ -12,7 +12,15 @@ import { Settings } from './screens/Settings.tsx'
 
 export function App(): ReactNode {
   return (
-    <BrowserRouter>
+    /*
+     * The router has to know the subpath too.
+     *
+     * Vite's `base` fixes where assets are fetched from; it does nothing for
+     * client-side routing. Without a basename the router compares the full
+     * pathname `/steadyhum/` against routes declared from `/`, matches nothing
+     * and renders the not-found screen — on a page whose assets all loaded fine.
+     */
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/appliances/new" element={<AddAppliance />} />
