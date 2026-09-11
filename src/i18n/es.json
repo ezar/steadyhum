@@ -1,0 +1,209 @@
+{
+  "app": {
+    "name": "SteadyHum",
+    "tagline": "Tus electrodomésticos tienen un sonido normal. SteadyHum lo aprende y te avisa cuando cambia."
+  },
+  "common": {
+    "back": "Volver",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Borrar",
+    "rename": "Cambiar nombre",
+    "retry": "Reintentar",
+    "close": "Cerrar",
+    "continue": "Continuar",
+    "notNow": "Ahora no",
+    "seconds": "{count} s",
+    "minutes": "{count} min",
+    "never": "Nunca"
+  },
+  "nav": {
+    "home": "Inicio",
+    "settings": "Ajustes",
+    "privacy": "Privacidad",
+    "about": "Acerca de"
+  },
+  "status": {
+    "learning": "Aprendiendo",
+    "never-checked": "Sin comprobar",
+    "normal": "Normal",
+    "watch": "Algo distinto",
+    "anomalous": "Distinto",
+    "unusable": "No utilizable"
+  },
+  "confidence": {
+    "low": "baja",
+    "medium": "media",
+    "high": "alta"
+  },
+  "applianceType": {
+    "washing-machine": "Lavadora",
+    "dryer": "Secadora",
+    "dishwasher": "Lavavajillas",
+    "fridge": "Nevera o congelador",
+    "boiler": "Caldera o termo",
+    "heat-pump": "Bomba de calor o unidad exterior de aire acondicionado",
+    "ac-indoor": "Aire acondicionado interior",
+    "extractor-hood": "Campana extractora",
+    "other": "Otro"
+  },
+  "home": {
+    "title": "Tus electrodomésticos",
+    "empty": {
+      "title": "Todavía no escuchas nada",
+      "body": "Añade un electrodoméstico y enséñale a SteadyHum cómo suena cuando está bien.",
+      "action": "Añadir electrodoméstico"
+    },
+    "addAppliance": "Añadir electrodoméstico",
+    "listenNow": "Escuchar ahora",
+    "lastCheck": "Última comprobación: {when}",
+    "learnFirst": "Aprender su normal"
+  },
+  "addAppliance": {
+    "title": "Añadir electrodoméstico",
+    "typeLabel": "¿Qué es?",
+    "nameLabel": "¿Cómo lo llamas?",
+    "namePlaceholder": "Lavadora de la cocina",
+    "placementLabel": "Dónde dejas el móvil (opcional)",
+    "placementPlaceholder": "En la balda de la izquierda, a la altura del pecho",
+    "placementHelp": "Cuanto más parecida sea la posición cada vez, más fiables serán las comprobaciones.",
+    "submit": "Guardar electrodoméstico",
+    "nameRequired": "Ponle un nombre para poder distinguirlo."
+  },
+  "appliance": {
+    "history": "Historial",
+    "trend": "Evolución",
+    "noChecks": "Aún no hay comprobaciones.",
+    "relearn": "Añadir sesión de aprendizaje",
+    "export": "Exportar perfil",
+    "deleteConfirm": "¿Borrar {name} y todo su historial? No se puede deshacer.",
+    "placement": "Colocación"
+  },
+  "enroll": {
+    "title": "Aprender su normal",
+    "intro": "Graba la máquina tres veces mientras funciona bien, a ser posible en momentos distintos de su ciclo. Deja el móvil siempre en el mismo sitio.",
+    "start": "Empezar sesión",
+    "stop": "Terminar sesión",
+    "progress": "{sessions} de {requiredSessions} sesiones · {seconds} s limpios de {requiredSeconds}",
+    "learned": "Normal aprendido",
+    "notLearned": "Faltan sesiones para tener un normal fiable.",
+    "statesFound": "He encontrado {count} estados distintos en esta grabación.",
+    "statesFound_one": "He encontrado 1 estado en esta grabación.",
+    "noiseHint": "Oigo una voz, espera un momento.",
+    "musicHint": "Oigo música o la tele, espera un momento.",
+    "tooQuiet": "Casi no oigo nada. Acerca el móvil a la máquina.",
+    "addMore": "Puedes añadir más sesiones cuando quieras: cuantas más, más ajustado será el aviso.",
+    "tooLoud": "Hay un sonido demasiado fuerte cerca, espera un momento.",
+    "clipping": "El sonido satura el micrófono. Aleja un poco el móvil.",
+    "learnFailed": "No he podido aprender el normal con estas grabaciones. Prueba a añadir otra sesión con la máquina funcionando."
+  },
+  "check": {
+    "title": "Escuchar ahora",
+    "start": "Escuchar 30 segundos",
+    "listening": "Escuchando…",
+    "hold": "Sujeta el móvil donde siempre.",
+    "needsProfile": "Primero enséñale a SteadyHum cómo suena cuando está bien.",
+    "level": "Nivel"
+  },
+  "verdict": {
+    "normal": "Suena como siempre.",
+    "unusable": "No he podido escuchar bien.",
+    "unusableBody": "Había demasiado ruido de fondo en más del 40 % de la grabación. Prueba otra vez con menos ruido.",
+    "matchedState": "Se parece al estado {state} de los que aprendí.",
+    "addSession": "Añadir sesión de aprendizaje",
+    "levelGuard": "El móvil parece estar más cerca o más lejos que cuando aprendí.",
+    "howItDiffers": "En qué se diferencia",
+    "commonChecks": "Lo que suele revisarse",
+    "askTechnician": "Si tienes dudas, consulta a un técnico.",
+    "feedbackQuestion": "¿Acerté?",
+    "actuallyFine": "En realidad está bien",
+    "actuallyBroken": "En realidad estaba mal",
+    "notSure": "No estoy seguro",
+    "feedbackThanks": "Gracias. Lo tendré en cuenta la próxima vez.",
+    "undo": "Deshacer",
+    "keepClip": "Guardar el fragmento de audio en este móvil",
+    "comparedWith": "Comparado con el normal aprendido el {date}",
+    "watch": "Suena algo distinto.",
+    "anomalous": "Suena distinto.",
+    "newState": "Puede que sea una fase que no escuché durante el aprendizaje. Si la máquina estaba haciendo algo nuevo, añade una sesión."
+  },
+  "descriptor": {
+    "level": {
+      "higher": "Suena más fuerte de lo normal.",
+      "lower": "Suena más flojo de lo normal."
+    },
+    "spectralFlatness": {
+      "higher": "El sonido es más áspero o ruidoso que de costumbre.",
+      "lower": "El sonido es más puro y con más tono que de costumbre."
+    },
+    "spectralCentroidHz": {
+      "higher": "El sonido es más agudo que de costumbre.",
+      "lower": "El sonido es más grave que de costumbre."
+    },
+    "spectralFlux": {
+      "higher": "El sonido es menos estable: cambia más de lo normal.",
+      "lower": "El sonido es más estable de lo normal."
+    },
+    "onsetPeriodicity": {
+      "higher": "Los golpes son más regulares que de costumbre.",
+      "lower": "Los golpes son menos regulares que de costumbre."
+    },
+    "amplitudeModulationHz": {
+      "higher": "El zumbido late más rápido que de costumbre.",
+      "lower": "El zumbido late más despacio que de costumbre."
+    },
+    "amplitudeModulationDepth": {
+      "higher": "El zumbido pulsa con más fuerza que de costumbre.",
+      "lower": "El zumbido pulsa menos que de costumbre."
+    },
+    "peakFrequencyHz": {
+      "higher": "El tono dominante es más agudo que de costumbre.",
+      "lower": "El tono dominante es más grave que de costumbre."
+    },
+    "peakProminenceDb": {
+      "higher": "Destaca más un silbido o chirrido sobre el resto.",
+      "lower": "El silbido habitual destaca menos."
+    },
+    "detail": "{value} {unit} frente a {reference} {unit} de costumbre"
+  },
+  "engine": {
+    "title": "El motor de audio todavía no está disponible",
+    "notInstalled": "SteadyHum escucha a través de earshot, el motor de audio compartido. Aún no hay una versión publicada, así que grabar y puntuar están desactivados. Lo demás funciona.",
+    "microphoneDenied": "Necesito permiso para usar el micrófono. Actívalo en los ajustes del navegador y vuelve a intentarlo.",
+    "unsupportedBrowser": "Este navegador no tiene lo que necesito para analizar sonido. Prueba con Chrome en Android o Safari en iOS 17 o superior.",
+    "modelLoadFailed": "No he podido cargar los modelos. Comprueba la conexión la primera vez que abras la app.",
+    "processingFlags": "Este navegador no ha desactivado su procesado de audio. Los resultados pueden ser menos fiables.",
+    "unknown": "Algo ha fallado al preparar el micrófono."
+  },
+  "settings": {
+    "title": "Ajustes",
+    "language": "Idioma",
+    "languageEs": "Español",
+    "languageEn": "English",
+    "models": "Modelos",
+    "modelsStatus": "Estado de los modelos",
+    "deeperAnalysis": "Análisis más profundo",
+    "deeperAnalysisHelp": "Descarga un modelo adicional para describir mejor los cambios. Ocupa más espacio.",
+    "keepClips": "Guardar fragmentos de audio",
+    "keepClipsHelp": "Solo en este móvil, y solo alrededor de los momentos que suenan distinto.",
+    "retention": "Borrar datos detallados después de {days} días",
+    "importProfile": "Importar perfil",
+    "exportProfile": "Exportar perfil",
+    "importSuccess": "Perfil importado como «{name}».",
+    "importError": "No he podido leer ese archivo: {reason}."
+  },
+  "privacy": {
+    "title": "Privacidad",
+    "headline": "El audio no sale de este móvil.",
+    "body": "SteadyHum analiza el sonido dentro del navegador. No hay cuentas, no hay servidor y no se sube nada. Las únicas descargas son la propia aplicación y los modelos.",
+    "storedTitle": "Qué se guarda en este móvil",
+    "storedAudio": "Fragmentos de audio: solo si los activas tú, y puedes borrarlos cuando quieras.",
+    "storedProfiles": "El normal aprendido de cada máquina: números, no sonido.",
+    "storedHistory": "El historial de comprobaciones y tus respuestas.",
+    "disclaimer": "SteadyHum es información para consumidores, no asesoramiento profesional. No diagnostica averías. Los aparatos de gas debe revisarlos siempre un técnico certificado. No es un dispositivo médico ni de seguridad."
+  },
+  "errors": {
+    "notFound": "No encuentro esa página.",
+    "applianceNotFound": "Ese electrodoméstico ya no existe."
+  }
+}

@@ -1,0 +1,209 @@
+{
+  "app": {
+    "name": "SteadyHum",
+    "tagline": "Your appliances have a normal. SteadyHum learns it and tells you when it changes."
+  },
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "rename": "Rename",
+    "retry": "Try again",
+    "close": "Close",
+    "continue": "Continue",
+    "notNow": "Not now",
+    "seconds": "{count} s",
+    "minutes": "{count} min",
+    "never": "Never"
+  },
+  "nav": {
+    "home": "Home",
+    "settings": "Settings",
+    "privacy": "Privacy",
+    "about": "About"
+  },
+  "status": {
+    "learning": "Learning",
+    "never-checked": "Never checked",
+    "normal": "Normal",
+    "watch": "Slightly different",
+    "anomalous": "Different",
+    "unusable": "Unusable"
+  },
+  "confidence": {
+    "low": "low",
+    "medium": "medium",
+    "high": "high"
+  },
+  "applianceType": {
+    "washing-machine": "Washing machine",
+    "dryer": "Dryer",
+    "dishwasher": "Dishwasher",
+    "fridge": "Fridge or freezer",
+    "boiler": "Boiler or water heater",
+    "heat-pump": "Heat pump or AC outdoor unit",
+    "ac-indoor": "AC indoor unit",
+    "extractor-hood": "Extractor hood",
+    "other": "Other"
+  },
+  "home": {
+    "title": "Your appliances",
+    "empty": {
+      "title": "Nothing to listen to yet",
+      "body": "Add an appliance and teach SteadyHum what it sounds like when it is fine.",
+      "action": "Add appliance"
+    },
+    "addAppliance": "Add appliance",
+    "listenNow": "Listen now",
+    "lastCheck": "Last check: {when}",
+    "learnFirst": "Learn its normal"
+  },
+  "addAppliance": {
+    "title": "Add appliance",
+    "typeLabel": "What is it?",
+    "nameLabel": "What do you call it?",
+    "namePlaceholder": "Kitchen washing machine",
+    "placementLabel": "Where you put the phone (optional)",
+    "placementPlaceholder": "On the shelf to the left, at chest height",
+    "placementHelp": "The closer the position is to last time, the more reliable the checks.",
+    "submit": "Save appliance",
+    "nameRequired": "Give it a name so you can tell it apart."
+  },
+  "appliance": {
+    "history": "History",
+    "trend": "Trend",
+    "noChecks": "No checks yet.",
+    "relearn": "Add a learning session",
+    "export": "Export profile",
+    "deleteConfirm": "Delete {name} and all its history? This cannot be undone.",
+    "placement": "Placement"
+  },
+  "enroll": {
+    "title": "Learn its normal",
+    "intro": "Record the machine three times while it is working well, ideally at different moments of its cycle. Hold the phone in the same spot each time.",
+    "start": "Start session",
+    "stop": "End session",
+    "progress": "{sessions} of {requiredSessions} sessions · {seconds} s clean of {requiredSeconds}",
+    "learned": "Normal learned",
+    "notLearned": "A few more sessions are needed for a reliable normal.",
+    "statesFound": "I found {count} distinct sound states in this recording.",
+    "statesFound_one": "I found 1 sound state in this recording.",
+    "noiseHint": "I hear a voice, wait a moment.",
+    "musicHint": "I hear music or a TV, wait a moment.",
+    "tooQuiet": "I can barely hear anything. Move the phone closer to the machine.",
+    "addMore": "You can add more sessions any time: the more there are, the tighter the warning.",
+    "tooLoud": "Something nearby is far too loud, wait a moment.",
+    "clipping": "The sound is clipping the microphone. Move the phone back a little.",
+    "learnFailed": "I could not learn a normal from these recordings. Try adding another session with the machine running."
+  },
+  "check": {
+    "title": "Listen now",
+    "start": "Listen for 30 seconds",
+    "listening": "Listening…",
+    "hold": "Hold the phone where you always do.",
+    "needsProfile": "First teach SteadyHum what it sounds like when it is fine.",
+    "level": "Level"
+  },
+  "verdict": {
+    "normal": "It sounds like it always does.",
+    "unusable": "I could not listen properly.",
+    "unusableBody": "There was too much background noise in more than 40% of the recording. Try again somewhere quieter.",
+    "matchedState": "This matches state {state} of the ones I learned.",
+    "addSession": "Add a learning session",
+    "levelGuard": "The phone seems closer or farther than during learning.",
+    "howItDiffers": "How it differs",
+    "commonChecks": "Common things people check",
+    "askTechnician": "If in doubt, ask a technician.",
+    "feedbackQuestion": "Did I get it right?",
+    "actuallyFine": "It is actually fine",
+    "actuallyBroken": "It was actually broken",
+    "notSure": "Not sure",
+    "feedbackThanks": "Thanks. I will take that into account next time.",
+    "undo": "Undo",
+    "keepClip": "Keep the audio clip on this phone",
+    "comparedWith": "Compared with the normal learned on {date}",
+    "watch": "It sounds slightly different.",
+    "anomalous": "It sounds different.",
+    "newState": "This may be a phase I never heard during learning. If the machine was doing something new, add a session."
+  },
+  "descriptor": {
+    "level": {
+      "higher": "It sounds louder than usual.",
+      "lower": "It sounds quieter than usual."
+    },
+    "spectralFlatness": {
+      "higher": "The sound is rougher or noisier than usual.",
+      "lower": "The sound is purer and more tonal than usual."
+    },
+    "spectralCentroidHz": {
+      "higher": "The sound is brighter than usual.",
+      "lower": "The sound is duller than usual."
+    },
+    "spectralFlux": {
+      "higher": "The sound is less steady: it changes more than usual.",
+      "lower": "The sound is steadier than usual."
+    },
+    "onsetPeriodicity": {
+      "higher": "The knocks are more regular than usual.",
+      "lower": "The knocks are less regular than usual."
+    },
+    "amplitudeModulationHz": {
+      "higher": "The hum pulses faster than usual.",
+      "lower": "The hum pulses slower than usual."
+    },
+    "amplitudeModulationDepth": {
+      "higher": "The hum pulses more strongly than usual.",
+      "lower": "The hum pulses less than usual."
+    },
+    "peakFrequencyHz": {
+      "higher": "The dominant tone is higher pitched than usual.",
+      "lower": "The dominant tone is lower pitched than usual."
+    },
+    "peakProminenceDb": {
+      "higher": "A whine or squeal stands out more than usual.",
+      "lower": "The usual whine stands out less."
+    },
+    "detail": "{value} {unit} against the usual {reference} {unit}"
+  },
+  "engine": {
+    "title": "The audio engine is not available yet",
+    "notInstalled": "SteadyHum listens through earshot, the shared audio engine. No release is published yet, so recording and scoring are turned off. Everything else works.",
+    "microphoneDenied": "I need permission to use the microphone. Turn it on in the browser settings and try again.",
+    "unsupportedBrowser": "This browser does not have what I need to analyse sound. Try Chrome on Android or Safari on iOS 17 or newer.",
+    "modelLoadFailed": "I could not load the models. Check your connection the first time you open the app.",
+    "processingFlags": "This browser did not turn off its own audio processing. Results may be less reliable.",
+    "unknown": "Something went wrong while preparing the microphone."
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languageEs": "Español",
+    "languageEn": "English",
+    "models": "Models",
+    "modelsStatus": "Model status",
+    "deeperAnalysis": "Deeper analysis",
+    "deeperAnalysisHelp": "Downloads an extra model to describe changes better. It takes more space.",
+    "keepClips": "Keep audio clips",
+    "keepClipsHelp": "Only on this phone, and only around the moments that sound different.",
+    "retention": "Delete detailed data after {days} days",
+    "importProfile": "Import profile",
+    "exportProfile": "Export profile",
+    "importSuccess": "Profile imported as “{name}”.",
+    "importError": "I could not read that file: {reason}."
+  },
+  "privacy": {
+    "title": "Privacy",
+    "headline": "Audio never leaves this phone.",
+    "body": "SteadyHum analyses sound inside the browser. There are no accounts, no server and nothing is uploaded. The only downloads are the app itself and the models.",
+    "storedTitle": "What is stored on this phone",
+    "storedAudio": "Audio clips: only if you turn them on, and you can delete them any time.",
+    "storedProfiles": "The learned normal of each machine: numbers, not sound.",
+    "storedHistory": "The history of checks and your answers.",
+    "disclaimer": "SteadyHum is consumer information, not professional advice. It does not diagnose faults. Gas appliances must always be checked by a certified technician. It is not a medical or safety device."
+  },
+  "errors": {
+    "notFound": "I cannot find that page.",
+    "applianceNotFound": "That appliance no longer exists."
+  }
+}

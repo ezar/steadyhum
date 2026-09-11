@@ -1,0 +1,75 @@
+@import 'tailwindcss';
+
+/**
+ * Design tokens (section 10).
+ *
+ * A warm neutral base, one confident accent for the primary action, and a
+ * strict semantic trio for verdicts. Red-ish tones are reserved for
+ * "different"; they are never decoration.
+ */
+@theme {
+  --color-paper: #f7f4ef;
+  --color-bone: #efeae1;
+  --color-card: #fffdfa;
+  --color-ink: #1b1a17;
+  --color-ink-soft: #55504a;
+  --color-ink-faint: #8b857c;
+  --color-hairline: #e2dcd1;
+
+  --color-accent: #16706b;
+  --color-accent-soft: #d8ebe8;
+  --color-accent-ink: #0d4b47;
+
+  --color-normal: #4f8f63;
+  --color-normal-soft: #dff0e3;
+  --color-slight: #b8801b;
+  --color-slight-soft: #f8ecd4;
+  --color-different: #c25743;
+  --color-different-soft: #f7e0da;
+  --color-unusable: #8b857c;
+  --color-unusable-soft: #e8e5df;
+
+  --font-sans: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', 'Noto Sans', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', 'Roboto Mono', monospace;
+
+  --radius-card: 1rem;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px rgb(27 26 23 / 0.05), 0 8px 24px -16px rgb(27 26 23 / 0.25);
+}
+
+@layer base {
+  html {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    min-height: 100dvh;
+  }
+
+  /* Levels, scores and frequencies must line up in the descriptor list. */
+  .tabular {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Motion is purposeful and short; respect the system preference. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

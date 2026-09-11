@@ -1,0 +1,9 @@
+# pnpm reads its settings from here; the `pnpm` field in package.json is no
+# longer consulted, and neither is most of .npmrc.
+#
+# esbuild is Vite's bundler and fetches its platform binary in a postinstall
+# script. pnpm blocks dependency lifecycle scripts by default, and without this
+# allowance Vite cannot run. earshot ships plain TypeScript source and needs no
+# scripts of its own.
+allowBuilds:
+  esbuild: true

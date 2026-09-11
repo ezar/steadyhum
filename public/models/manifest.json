@@ -1,0 +1,22 @@
+{
+  "$comment": "Model binaries are never committed. `pnpm models:fetch` downloads each remote entry into public/models/ and verifies its SHA-256, then copies the MediaPipe WASM runtime out of node_modules. earshot is handed these paths at runtime; nothing is ever fetched from a CDN by the app itself.",
+  "files": [
+    {
+      "name": "yamnet_classifier.tflite",
+      "url": "https://storage.googleapis.com/mediapipe-models/audio_classifier/yamnet/float32/1/yamnet.tflite",
+      "sha256": "4d8b4a53282dc83ef04e3e7dbc4fbc98082e34e44ed798e16c3a0cdd4c584faf",
+      "purpose": "Noise guard and machine-likeness check (521 AudioSet classes)."
+    },
+    {
+      "name": "yamnet_embedder.tflite",
+      "url": "https://storage.googleapis.com/mediapipe-models/audio_embedder/yamnet/float32/1/yamnet.tflite",
+      "sha256": "5e357e61672b6ef7ef27b1804ad01daaa759586f9d63f23125303ca415883bec",
+      "purpose": "1024-dimensional embedding per window; the space profiles are learned in."
+    }
+  ],
+  "wasm": {
+    "from": "@mediapipe/tasks-audio/wasm",
+    "to": "wasm",
+    "purpose": "MediaPipe's WASM runtime, copied from the installed package so no CDN is involved."
+  }
+}
