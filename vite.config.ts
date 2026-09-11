@@ -11,49 +11,6 @@ import { VitePWA } from 'vite-plugin-pwa'
 const src = (p: string): string => fileURLToPath(new URL(`./src/${p}`, import.meta.url))
 
 /**
- * Makes earshot's MediaPipe import statically analysable.
- *
- * earshot's default loader holds the specifier in a variable behind a
- * `@vite-ignore` comment, so the bundler leaves `import('@mediapipe/tasks-audio')`
- * in the output. A browser cannot resolve a bare specifier at runtime, and the
- * engine Worker fails to start with "Failed to resolve module specifier". Its
- * own docs say a Vite app should pass `loadTasksAudio` instead — but the loader
- * is a function, `EngineOptions.models` is `Omit<ModelUrls, 'loadTasksAudio'>`,
- * and the models are built inside the Worker, so there is no way to hand one in.
- *
- * Rewriting that one line to a static import lets Vite bundle MediaPipe into the
- * worker chunk. Delete this plugin once earshot can be given a loader (or
- * imports MediaPipe itself). See docs/decisions/0003-earshot-mediapipe-loader.md.
- */
-function earshotStaticMediapipe(): Plugin {
-  const from = [
-    "  const specifier = '@mediapipe/tasks-audio';",
-    '  const module: unknown = await import(/* @vite-ignore */ specifier);',
-  ].join('\n')
-  const to = [
-    "  const imported = await import('@mediapipe/tasks-audio');",
-    // Rollup may resolve MediaPipe's CommonJS build, which lands the namespace
-    // under `default`; the ESM build exposes it directly.
-    '  const module: unknown = (imported as { default?: unknown }).default ?? imported;',
-  ].join('\n')
-
-  return {
-    name: 'steadyhum:earshot-static-mediapipe',
-    enforce: 'pre',
-    transform(code, id) {
-      if (!id.includes('earshot') || !id.endsWith('tasks-audio.ts')) return null
-      if (!code.includes(from)) {
-        // earshot changed the loader: stop silently patching something else.
-        throw new Error('earshot tasks-audio loader no longer matches the expected shape')
-      }
-      // Two lines in, two lines out, so every mapping still lines up. Saying so
-      // explicitly keeps the bundler from warning that the sourcemap is stale.
-      return { code: code.replace(from, to), map: null }
-    },
-  }
-}
-
-/**
  * Where the app is served from.
  *
  * Vercel serves it at the root; a GitHub Pages project site serves it under
@@ -83,7 +40,6 @@ export default defineConfig({
   base,
   plugins: [
     spaFallback(),
-    earshotStaticMediapipe(),
     react(),
     tailwindcss(),
     VitePWA({
@@ -138,18 +94,12 @@ export default defineConfig({
   },
   worker: {
     /**
-     * Classic, not ES. MediaPipe's WASM loader brings itself in with
-     * `importScripts`, which does not exist in a module worker — it fails with
-     * "ModuleFactory not set" after fetching the loader. earshot's README
-     * suggests `format: 'es'`, but its `createWorker` hook exists precisely so
-     * the host can decide, and `src/audio/engine.ts` constructs a classic
-     * Worker to match.
+     * Classic, not ES — earshot requires it and its README says so: MediaPipe
+     * loads its WASM glue with `importScripts`, which module workers do not
+     * have. The setting is global, so this app cannot have module workers of
+     * its own.
      */
     format: 'iife',
-    // Worker bundles get their own plugin list; the top-level `plugins` are not
-    // applied to them, and the MediaPipe import that needs rewriting is only
-    // reachable from the worker.
-    plugins: () => [earshotStaticMediapipe()],
   },
   build: {
     target: 'es2022',

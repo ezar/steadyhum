@@ -10,7 +10,7 @@ returns plain serializable objects.
 The dependency is pinned to a release tag, never a branch:
 
 ```jsonc
-{ "dependencies": { "earshot": "github:ezar/earshot#v0.3.0" } }
+{ "dependencies": { "earshot": "github:ezar/earshot#v0.4.0" } }
 ```
 
 earshot ships TypeScript source — its `exports` point at `src/` — so there is no
@@ -76,11 +76,13 @@ Both are written up in full under `docs/decisions/`:
 1. **MediaPipe is pinned at 0.10.21**, exactly, because `AudioEmbedder` is gone
    from 0.10.34 onwards and the whole profile design depends on it
    (`0003-mediapipe-is-pinned-for-the-audio-embedder.md`).
-2. **earshot's MediaPipe loader is patched at build time**, because its Worker
-   cannot be handed a `loadTasksAudio` and the bare specifier does not resolve in
-   a browser. The Vite plugin throws if earshot's source stops matching, and the
-   worker is built as a classic script so MediaPipe's `importScripts` works
-   (`0004-earshot-mediapipe-loader-is-patched-at-build-time.md`).
+2. **The engine worker must be classic, not ESM.** `worker.format: 'iife'` in
+   `vite.config.ts` is required by earshot: MediaPipe loads its WASM glue with
+   `importScripts`, which module workers do not have. The setting is global, so
+   this app cannot have module workers of its own. earshot v0.4.0 fixed the
+   MediaPipe specifier and the worker type upstream, so the build-time patch
+   this project used to carry is gone
+   (`0004-earshot-mediapipe-loader-is-patched-at-build-time.md`, superseded).
 
 ## Working against an unreleased earshot
 
