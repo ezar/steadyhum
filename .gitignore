@@ -1,0 +1,21 @@
+node_modules
+dist
+dev-dist
+coverage
+playwright-report
+test-results
+.DS_Store
+*.local
+.env
+.env.*
+!.env.example
+.vscode/*
+!.vscode/extensions.json
+
+# Model binaries are fetched by `pnpm models:fetch`; only the manifest is committed.
+public/models/*
+!public/models/manifest.json
+!public/models/.gitkeep
+
+# TypeScript build info
+*.tsbuildinfo
