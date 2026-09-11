@@ -39,7 +39,9 @@ When `earshot` tags its first release:
 
 1. `pnpm add earshot@github:ezar/earshot#v0.1.0` — always a release tag, never a
    branch. `earshot` ships TypeScript source (its `exports` point at `src/`), so
-   there is no build step and no install scripts, which keeps pnpm 10 happy.
+   there is no build step and no install scripts, which keeps pnpm happy: it
+   blocks dependency lifecycle scripts by default, and the only allowance this
+   project needs is esbuild, declared in `pnpm-workspace.yaml`.
 2. Delete the `earshot` alias in `vite.config.ts` and in `vitest.config.ts`, and
    the `earshot` entry under `paths` in `tsconfig.app.json`.
 3. Point `src/audio/entrypoints.ts` at the real entry points:
