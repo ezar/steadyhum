@@ -25,12 +25,12 @@ descriptors all come from [`earshot`](https://github.com/ezar/earshot), the
 framework-agnostic engine shared with Meowlogue.
 
 The dependency is pinned to a release tag, never a branch:
-`"earshot": "github:ezar/earshot#v0.3.0"`.
+`"earshot": "github:ezar/earshot#v0.4.0"`.
 
 Two constraints come with it, both written up under `docs/decisions/`:
 `@mediapipe/tasks-audio` is pinned at exactly 0.10.21 because MediaPipe dropped
-`AudioEmbedder` after it, and earshot's MediaPipe loader is rewritten by a Vite
-plugin because its engine Worker cannot be handed a `loadTasksAudio`.
+`AudioEmbedder` after it, and `worker.format` must be `iife` because MediaPipe
+loads its WASM glue with `importScripts`, which module workers do not have.
 
 Read [`docs/earshot-integration.md`](docs/earshot-integration.md) for how the
 two projects meet.

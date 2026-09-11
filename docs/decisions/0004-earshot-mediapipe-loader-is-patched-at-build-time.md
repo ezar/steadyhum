@@ -1,7 +1,14 @@
 # 0004 — Patch earshot's MediaPipe loader at build time
 
-Status: accepted
+Status: superseded by earshot v0.4.0, 2026-09-11
 Date: 2026-09-11
+
+> earshot v0.4.0 fixed both halves upstream, which was always the right place:
+> its default loader now imports `@mediapipe/tasks-audio` statically, and its
+> default `createWorker` builds a classic worker. The Vite plugin and the
+> `createWorker` override are deleted. What survives is `worker.format: 'iife'`
+> — now earshot's own documented requirement rather than this project's
+> deviation — and the targeted `assetsInlineLimit` for the capture worklet.
 
 ## Context
 

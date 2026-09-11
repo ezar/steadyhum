@@ -52,13 +52,7 @@ let engine: Promise<EngineHandle> | null = null
 
 /** Creates the engine once and reuses it for the lifetime of the tab. */
 function getEngine(): Promise<EngineHandle> {
-  engine ??= createEngine({
-    workerUrl,
-    models: MODEL_URLS,
-    // Classic worker: MediaPipe's WASM loader needs `importScripts`, which a
-    // module worker does not have. See the `worker.format` note in vite.config.
-    createWorker: (url) => new Worker(url, { name: 'earshot-engine' }),
-  })
+  engine ??= createEngine({ workerUrl, models: MODEL_URLS })
   return engine
 }
 
