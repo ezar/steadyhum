@@ -46,7 +46,9 @@ function earshotStaticMediapipe(): Plugin {
         // earshot changed the loader: stop silently patching something else.
         throw new Error('earshot tasks-audio loader no longer matches the expected shape')
       }
-      return code.replace(from, to)
+      // Two lines in, two lines out, so every mapping still lines up. Saying so
+      // explicitly keeps the bundler from warning that the sourcemap is stale.
+      return { code: code.replace(from, to), map: null }
     },
   }
 }
