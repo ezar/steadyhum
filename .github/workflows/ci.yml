@@ -49,3 +49,9 @@ jobs:
         # would pass vacuously.
         run: pnpm models:fetch
       - run: pnpm e2e
+      - name: End-to-end under the Pages subpath
+        # Vite's base only moves the assets. The router needs its own basename,
+        # and nothing but actually driving the app under a subpath notices when
+        # it is missing: every asset loads and the app renders the not-found
+        # screen.
+        run: pnpm e2e:subpath

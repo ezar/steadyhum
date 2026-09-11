@@ -6,7 +6,7 @@ import { expect, test } from '@playwright/test'
  * see docs/earshot-integration.md.
  */
 test('adds an appliance and shows it on Home', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('./')
 
   await page
     .getByRole('link', { name: /añadir electrodoméstico|add appliance/i })
@@ -21,12 +21,12 @@ test('adds an appliance and shows it on Home', async ({ page }) => {
     page.getByRole('heading', { name: /aprender su normal|learn its normal/i }),
   ).toBeVisible()
 
-  await page.goto('/')
+  await page.goto('./')
   await expect(page.getByText('Lavavajillas de prueba')).toBeVisible()
 })
 
 test('states plainly that audio never leaves the device', async ({ page }) => {
-  await page.goto('/privacy')
+  await page.goto('./privacy')
   await expect(page.getByRole('heading', { level: 2 }).first()).toBeVisible()
 })
 
@@ -42,7 +42,7 @@ test('states plainly that audio never leaves the device', async ({ page }) => {
 test('the audio engine starts and produces analysis windows', async ({ page }) => {
   test.slow()
 
-  await page.goto('/appliances/new')
+  await page.goto('./appliances/new')
   await page.getByRole('textbox').first().fill('Motor')
   await page.getByRole('button', { name: /guardar electrodoméstico|save appliance/i }).click()
   await page.waitForURL(/\/learn$/)
