@@ -5,9 +5,9 @@
   "type": "module",
   "description": "Your appliances have a normal. SteadyHum learns it and tells you when it changes.",
   "license": "UNLICENSED",
-  "packageManager": "pnpm@11.26.0",
+  "packageManager": "pnpm@12.4.1",
   "engines": {
-    "node": ">=22.13"
+    "node": ">=22"
   },
   "scripts": {
     "dev": "vite",

@@ -1,5 +1,5 @@
-# pnpm 11 reads its settings from here; the `pnpm` field in package.json and
-# most of .npmrc are no longer consulted.
+# pnpm reads its settings from here; the `pnpm` field in package.json is no
+# longer consulted, and neither is most of .npmrc.
 #
 # esbuild is Vite's bundler and fetches its platform binary in a postinstall
 # script. pnpm blocks dependency lifecycle scripts by default, and without this
