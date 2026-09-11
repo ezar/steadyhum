@@ -8,8 +8,8 @@ const styles: Record<ApplianceStatus, { readonly className: string; readonly ico
   learning: { className: 'bg-accent-soft text-accent-ink', icon: '◍' },
   'never-checked': { className: 'bg-unusable-soft text-unusable', icon: '○' },
   normal: { className: 'bg-normal-soft text-normal', icon: '✓' },
-  'slightly-different': { className: 'bg-slight-soft text-slight', icon: '≈' },
-  different: { className: 'bg-different-soft text-different', icon: '!' },
+  watch: { className: 'bg-slight-soft text-slight', icon: '≈' },
+  anomalous: { className: 'bg-different-soft text-different', icon: '!' },
   unusable: { className: 'bg-unusable-soft text-unusable', icon: '–' },
 }
 

@@ -1,4 +1,4 @@
-import type { CheckStatus, Profile } from 'earshot'
+import type { Profile, Status } from 'earshot'
 
 import { newId, nowIso } from '@/lib/id.ts'
 
@@ -10,8 +10,13 @@ import {
 } from './schema.ts'
 import type { Appliance, ApplianceType, Session, StoredCheck, StoredProfile } from './schema.ts'
 
-/** What a card on Home shows. `learning` outranks any check result. */
-export type ApplianceStatus = 'learning' | 'never-checked' | CheckStatus
+/**
+ * What a card on Home shows.
+ *
+ * `learning` outranks any check result, and `unusable` is SteadyHum's own state
+ * for a check the guards spoiled — earshot never returns it.
+ */
+export type ApplianceStatus = 'learning' | 'never-checked' | 'unusable' | Status
 
 export interface EnrollmentProgress {
   readonly sessionCount: number
@@ -95,7 +100,7 @@ export function deriveStatus(
 ): ApplianceStatus {
   if (!enrollment.learned) return 'learning'
   if (lastCheck === null) return 'never-checked'
-  return lastCheck.status
+  return lastCheck.unusable ? 'unusable' : lastCheck.status
 }
 
 export async function getApplianceOverview(id: string): Promise<ApplianceOverview | null> {
@@ -139,7 +144,7 @@ export async function saveProfile(applianceId: string, profile: Profile): Promis
   const stored: StoredProfile = {
     id: newId(),
     applianceId,
-    version: profile.version,
+    revision: profile.revision,
     active: true,
     profile,
     createdAt: nowIso(),

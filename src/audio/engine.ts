@@ -1,38 +1,63 @@
 /**
  * SteadyHum's single point of contact with the earshot audio engine.
  *
- * Nothing else in the app imports `earshot` directly, so the day the real
- * package replaces the stub there is one file to look at.
+ * earshot splits the job in three: a {@link Capture} owns the microphone and
+ * emits PCM chunks, an {@link Engine} runs the models in a worker and emits one
+ * {@link WindowResult} per analysis window, and {@link createGuards} decides
+ * which of those windows are usable. This module wires the three together and
+ * hands the app a single subscribe-and-stop object.
  */
-import { EarshotError, createEngine } from 'earshot'
-import type { Engine } from 'earshot'
+import { createCapture, createEngine, createGuards } from 'earshot'
+import type { AppliedConstraints, GuardVerdict, WindowResult } from 'earshot'
 
 import { workerUrl, workletUrl } from './entrypoints.ts'
 
-/** Where `pnpm models:fetch` puts the self-hosted YAMNet task files. */
-export const MODELS_BASE_URL = '/models/'
+/**
+ * Where `pnpm models:fetch` puts the self-hosted model files.
+ *
+ * Built from `BASE_URL` so the app works both at a site root (Vercel) and under
+ * a subpath (a GitHub Pages project site).
+ */
+const base = import.meta.env.BASE_URL
 
-/** Where the MediaPipe WASM runtime is served from. Never a third-party CDN. */
-export const WASM_BASE_URL = '/models/wasm/'
+export const MODEL_URLS = {
+  wasmBaseUrl: `${base}models/wasm`,
+  classifierUrl: `${base}models/yamnet_classifier.tflite`,
+  embedderUrl: `${base}models/yamnet_embedder.tflite`,
+} as const
+
+/** One analysis window plus the guard's opinion of it. */
+export interface GuardedWindow {
+  readonly window: WindowResult
+  readonly guard: GuardVerdict
+}
+
+export interface Listening {
+  /** What the browser actually applied; `unhonoured` lists the flags it kept on. */
+  readonly appliedConstraints: AppliedConstraints
+  /** Stops the microphone and resolves with every window produced. */
+  stop: () => Promise<readonly GuardedWindow[]>
+}
 
 export type EngineAvailability =
   | { readonly kind: 'ready' }
-  /** earshot is not installed yet; the stub answered. */
-  | { readonly kind: 'not-installed' }
   | { readonly kind: 'microphone-denied' }
   | { readonly kind: 'unsupported-browser' }
   | { readonly kind: 'model-load-failed' }
   | { readonly kind: 'error'; readonly message: string }
 
-let engine: Promise<Engine> | null = null
+type EngineHandle = Awaited<ReturnType<typeof createEngine>>
+
+let engine: Promise<EngineHandle> | null = null
 
 /** Creates the engine once and reuses it for the lifetime of the tab. */
-export function getEngine(): Promise<Engine> {
+function getEngine(): Promise<EngineHandle> {
   engine ??= createEngine({
     workerUrl,
-    workletUrl,
-    modelsBaseUrl: MODELS_BASE_URL,
-    wasmBaseUrl: WASM_BASE_URL,
+    models: MODEL_URLS,
+    // Classic worker: MediaPipe's WASM loader needs `importScripts`, which a
+    // module worker does not have. See the `worker.format` note in vite.config.
+    createWorker: (url) => new Worker(url, { name: 'earshot-engine' }),
   })
   return engine
 }
@@ -43,36 +68,63 @@ export async function closeEngine(): Promise<void> {
   engine = null
   if (pending === null) return
   try {
-    const instance = await pending
-    await instance.close()
+    await (await pending).close()
   } catch {
     // An engine that never started has nothing to close.
   }
 }
 
-function classify(error: unknown): EngineAvailability {
-  if (error instanceof EarshotError) {
-    switch (error.code) {
-      case 'not-implemented':
-        return { kind: 'not-installed' }
-      case 'microphone-denied':
-        return { kind: 'microphone-denied' }
-      case 'unsupported-browser':
-        return { kind: 'unsupported-browser' }
-      case 'model-load-failed':
-        return { kind: 'model-load-failed' }
-      case 'not-enough-audio':
-        return { kind: 'error', message: error.message }
-    }
+/**
+ * Opens the microphone and streams guarded windows until `stop()` is called.
+ *
+ * @param onWindow Called once per analysis window, roughly every `HOP_SECONDS`.
+ */
+export async function listen(onWindow: (result: GuardedWindow) => void): Promise<Listening> {
+  const instance = await getEngine()
+  const guards = createGuards()
+  const collected: GuardedWindow[] = []
+
+  const offWindow = instance.onWindow((window) => {
+    const result: GuardedWindow = { window, guard: guards.check(window) }
+    collected.push(result)
+    onWindow(result)
+  })
+
+  const capture = await createCapture({ workletUrl })
+  const offChunk = capture.onChunk((samples) => {
+    void instance.push(samples)
+  })
+
+  return {
+    appliedConstraints: capture.appliedConstraints,
+    stop: async () => {
+      offChunk()
+      await capture.stop()
+      offWindow()
+      return collected
+    },
   }
-  if (error instanceof DOMException && error.name === 'NotAllowedError') {
-    return { kind: 'microphone-denied' }
-  }
-  return { kind: 'error', message: error instanceof Error ? error.message : String(error) }
 }
 
-/** Tries to bring the engine up and reports why it could not, if it could not. */
+function classify(error: unknown): EngineAvailability {
+  if (error instanceof DOMException) {
+    if (error.name === 'NotAllowedError' || error.name === 'SecurityError') {
+      return { kind: 'microphone-denied' }
+    }
+    if (error.name === 'NotFoundError' || error.name === 'NotSupportedError') {
+      return { kind: 'unsupported-browser' }
+    }
+  }
+  const message = error instanceof Error ? error.message : String(error)
+  // The engine loads its models on startup; that is the one failure worth
+  // naming separately, because the fix is "check your connection once".
+  if (/model|wasm|tflite|fetch/i.test(message)) return { kind: 'model-load-failed' }
+  return { kind: 'error', message }
+}
+
+/** Brings the engine up and reports why it could not, if it could not. */
 export async function probeEngine(): Promise<EngineAvailability> {
+  if (!detectBrowserSupport().supported) return { kind: 'unsupported-browser' }
   try {
     await getEngine()
     return { kind: 'ready' }

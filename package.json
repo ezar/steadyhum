@@ -26,8 +26,10 @@
     "vercel-build": "pnpm models:fetch && pnpm build"
   },
   "dependencies": {
+    "@mediapipe/tasks-audio": "0.10.21",
     "dexie": "^4.0.11",
     "dexie-react-hooks": "^4.4.0",
+    "earshot": "github:ezar/earshot#v0.3.0",
     "framer-motion": "^13.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

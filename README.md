@@ -24,15 +24,16 @@ YAMNet wrappers, k-means, profile learning, scoring and the interpretable
 descriptors all come from [`earshot`](https://github.com/ezar/earshot), the
 framework-agnostic engine shared with Meowlogue.
 
-**`earshot` has no release yet**, so the app currently ships a typed stub in
-`src/audio/earshot-stub/` that states the contract and refuses to pretend: the
-enrollment and check screens say plainly that listening is unavailable and leave
-the record buttons disabled. Everything that does not need audio works.
+The dependency is pinned to a release tag, never a branch:
+`"earshot": "github:ezar/earshot#v0.3.0"`.
 
-Read [`docs/earshot-integration.md`](docs/earshot-integration.md) for the
-contract and the mechanical switch to the real package, and
-[`docs/decisions/0001-earshot-seam.md`](docs/decisions/0001-earshot-seam.md) for
-why it was done this way.
+Two constraints come with it, both written up under `docs/decisions/`:
+`@mediapipe/tasks-audio` is pinned at exactly 0.10.21 because MediaPipe dropped
+`AudioEmbedder` after it, and earshot's MediaPipe loader is rewritten by a Vite
+plugin because its engine Worker cannot be handed a `loadTasksAudio`.
+
+Read [`docs/earshot-integration.md`](docs/earshot-integration.md) for how the
+two projects meet.
 
 ## Getting started
 
@@ -58,8 +59,8 @@ SHA-256 and `pnpm models:fetch` verifies each download.
 
 ```
 src/
-  audio/        the earshot seam: contract, stub, entry points, engine wrapper
-  db/           Dexie schema, repository, embedding quantization, profile transfer
+  audio/        the earshot boundary: entry points, engine wrapper, recorder hook
+  db/           Dexie schema, repository, recording persistence, profile transfer
   i18n/         Spanish (default) and English dictionaries; no hardcoded UI copy
   screens/      Home, add appliance, enrollment, check, appliance detail, settings
   store/        Zustand settings
@@ -84,10 +85,19 @@ scripts/        model fetching and checksum verification
 ## Status
 
 - **M0** (earshot proves the math) — not started, in the `earshot` repository.
-- **M1** (core loop) — scaffold in place: appliances, enrollment bookkeeping,
-  history, trend, profile import and export, settings, privacy, i18n, PWA.
-  Recording and scoring wait on M0.
+- **M1** (core loop) — working end to end: add an appliance, learn its normal
+  across sessions, run a 30 second check, read the verdict and its descriptors,
+  answer the feedback chips. Verified in Chromium with a fake microphone.
+  Not yet field-tested against a real appliance — that is `docs/field-test.md`.
 - M2–M4 — not started.
+
+## Deployment
+
+Static, no backend. `pnpm vercel-build` fetches the models and builds for a site
+root. A GitHub Pages workflow (`.github/workflows/deploy.yml`) builds the same
+output for a subpath: `BASE_PATH` feeds Vite's `base`, model URLs derive from
+`import.meta.env.BASE_URL`, and a copy of `index.html` at `404.html` gives the
+SPA its deep links back, since Pages has no rewrite rules.
 
 SteadyHum is consumer information, not professional advice. It does not diagnose
 faults, and gas appliances must always be checked by a certified technician.

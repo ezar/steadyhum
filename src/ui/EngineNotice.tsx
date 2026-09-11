@@ -6,7 +6,6 @@ import type { MessageKey } from '@/i18n/messages.ts'
 
 const messages: Record<EngineAvailability['kind'], MessageKey | null> = {
   ready: null,
-  'not-installed': 'engine.notInstalled',
   'microphone-denied': 'engine.microphoneDenied',
   'unsupported-browser': 'engine.unsupportedBrowser',
   'model-load-failed': 'engine.modelLoadFailed',

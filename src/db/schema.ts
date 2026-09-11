@@ -1,13 +1,12 @@
 import type {
-  ClassScore,
-  Confidence,
   Descriptor,
-  Interference,
+  GuardReason,
   Profile,
-  UserVerdict,
-  WindowFeatures,
+  QuantizedEmbedding,
+  Status,
+  Verdict,
+  WindowResult,
 } from 'earshot'
-import type { CheckStatus } from 'earshot'
 
 /** Appliance types. Only affects icons, placement tips and copy, never the model. */
 export type ApplianceType =
@@ -44,11 +43,12 @@ export interface Appliance {
   readonly updatedAt: string
 }
 
-/** A learned normal. One row per version; exactly one is active per appliance. */
+/** A learned normal. One row per revision; exactly one is active per appliance. */
 export interface StoredProfile {
   readonly id: string
   readonly applianceId: string
-  readonly version: number
+  /** Mirrors `profile.revision`, which every calibration bumps. */
+  readonly revision: number
   readonly active: boolean
   readonly profile: Profile
   readonly createdAt: string
@@ -71,40 +71,62 @@ export interface Session {
 }
 
 /**
- * One analysis window, quantized for storage. About 1 KB each: a two hour watch
- * session is roughly 15k windows, 15 MB. Pruned after
- * {@link WINDOW_RETENTION_DAYS}; the aggregates in `checks` are kept forever.
+ * One analysis window, with its embedding quantized for storage.
+ *
+ * earshot hands back a 1024-float embedding per window; int8 quantization takes
+ * it from 4 KB to about 1 KB, which is what keeps a two hour watch session
+ * (roughly 15k windows) inside the storage budget of section 7. Window-level
+ * rows are pruned after {@link WINDOW_RETENTION_DAYS}; the aggregates in
+ * `checks` are kept forever.
  */
 export interface StoredWindow {
   readonly id?: number
   readonly sessionId: string
-  readonly startSeconds: number
-  readonly levelDbfs: number
-  /** Int8-quantized embedding; multiply by `embeddingScale` to restore. */
-  readonly embedding: Int8Array
-  readonly embeddingScale: number
-  readonly topClasses: readonly ClassScore[]
-  readonly features: WindowFeatures
-  readonly interference: Interference | null
+  /** The window minus its embedding, which is stored quantized alongside. */
+  readonly window: Omit<WindowResult, 'embedding'>
+  readonly embedding: QuantizedEmbedding
+  /** Guard rejection reasons; empty when the window was accepted. */
+  readonly rejectedFor: readonly GuardReason[]
 }
 
+/**
+ * A finished check.
+ *
+ * `status` is earshot's verdict; `unusable` is SteadyHum's own, decided from
+ * the share of windows the guards rejected. earshot scores what it is given and
+ * does not judge whether the recording was worth scoring.
+ */
 export interface StoredCheck {
   readonly id: string
   readonly applianceId: string
   readonly sessionId: string
-  /** The profile version this check was scored against. */
-  readonly profileVersion: number
-  readonly status: CheckStatus
+  /** The profile revision this check was scored against. */
+  readonly profileRevision: number
+  readonly status: Status
+  /** True when too much of the recording was discarded to trust the verdict. */
+  readonly unusable: boolean
+  /** Anomaly score in [0, 1]. */
   readonly score: number
-  readonly confidence: Confidence
-  readonly matchedStateId: string | null
-  readonly unmatchedState: boolean
+  readonly dominantStateId: string
+  /** Share of windows at or above the anomalous threshold, in [0, 1]. */
+  readonly anomalousFraction: number
+  /** Check level minus the profile's learned level, in dB. */
   readonly levelDeltaDb: number
+  /** Share of windows the guards rejected, in [0, 1]. */
   readonly discardedRatio: number
   readonly descriptors: readonly Descriptor[]
   readonly verdict: UserVerdict | null
   readonly createdAt: string
 }
+
+/**
+ * What the user said about a verdict.
+ *
+ * earshot's {@link Verdict} has two values because only those two teach it
+ * anything; "not sure" is recorded for the user's own history and never fed
+ * back into the profile.
+ */
+export type UserVerdict = Verdict | 'not-sure'
 
 export interface Clip {
   readonly id: string
@@ -119,9 +141,10 @@ export interface CalibrationEntry {
   readonly id: string
   readonly applianceId: string
   readonly checkId: string
-  readonly verdict: UserVerdict
-  readonly previousMarginZ: number
-  readonly nextMarginZ: number
+  readonly verdict: Verdict
+  /** Profile revision before and after the calibration, so it can be undone. */
+  readonly previousRevision: number
+  readonly nextRevision: number
   readonly createdAt: string
   readonly undone: boolean
 }

@@ -2,94 +2,87 @@
 
 SteadyHum has no audio code of its own. Capture, resampling, feature extraction,
 the YAMNet wrappers, k-means, profile learning, scoring and the interpretable
-descriptors all live in [`earshot`](https://github.com/ezar/earshot), the
+descriptors all come from [`earshot`](https://github.com/ezar/earshot), the
 framework-agnostic engine shared with Meowlogue. SteadyHum contributes the UI,
-the persistence and the copy; `earshot` stays free of React and of storage and
-returns serializable objects.
+the persistence and the copy; earshot stays free of React and of storage and
+returns plain serializable objects.
 
-## Current state
+The dependency is pinned to a release tag, never a branch:
 
-At the time this scaffold was written `ezar/earshot` contained only a README:
-no source, no `package.json`, no release tag. There is therefore nothing to
-install and nothing to pin, so the app ships a **stub** that satisfies the
-contract and throws `EarshotError('not-implemented')` from every entry point.
-The UI detects that one error code and says plainly that listening is not
-available yet; nothing pretends to record.
+```jsonc
+{ "dependencies": { "earshot": "github:ezar/earshot#v0.3.0" } }
+```
 
-Everything that does not need audio — appliances, enrollment bookkeeping,
-history, profile import and export, settings, privacy, i18n, offline install —
-works today.
+earshot ships TypeScript source — its `exports` point at `src/` — so there is no
+build step and no install scripts. This project typechecks those sources under
+`strict`, `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes`, and they
+compile clean.
 
-## The seam
+## Where the two projects meet
 
-Three files, and nothing else, know that the stub exists:
+| SteadyHum                  | What it does                                                                                                               |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `src/audio/entrypoints.ts` | The `?worker&url` and `?url` imports of earshot's worker and capture worklet                                               |
+| `src/audio/engine.ts`      | The only module that imports `earshot` for the engine; wires capture, engine and guards into one subscribe-and-stop object |
+| `src/audio/useRecorder.ts` | Drives one recording session and exposes the live meters                                                                   |
+| `src/db/record.ts`         | Turns finished recordings into stored rows, and calls `learnProfile`, `scoreCheck`, `describeDifference` and `calibrate`   |
 
-| File                       | Role                                                     |
-| -------------------------- | -------------------------------------------------------- |
-| `src/audio/earshot-stub/`  | The stub package and the contract it implements          |
-| `src/audio/entrypoints.ts` | The `?worker&url` imports for the worker and the worklet |
-| `src/audio/engine.ts`      | The only module in the app that imports `earshot`        |
+Everything else in the app touches earshot only through its types.
 
-Every other module imports types and functions from `'earshot'` exactly as it
-will once the real package is installed.
+## The shape of the API, as used here
 
-## Switching to the real package
+- **Capture and engine are separate.** `createCapture({ workletUrl })` owns the
+  microphone and emits PCM chunks; `createEngine({ workerUrl, models })` runs
+  the models in a Worker and emits one `WindowResult` per analysis window.
+  `src/audio/engine.ts` joins them.
+- **Guards are a third thing.** `createGuards()` judges each window
+  (`silence`, `too-loud`, `interference`, `clipping`). earshot scores whatever it
+  is given; deciding a recording was too spoiled to show a verdict is
+  SteadyHum's call, and lives in `StoredCheck.unusable`.
+- **Status has three values**: `normal`, `watch`, `anomalous`. The UI's
+  "Unusable" is SteadyHum's own fourth state, not earshot's.
+- **Scores are in `[0, 1]`**, not z units. Everything the profile heard while
+  learning maps into `[0, 0.5]`; the top half is reserved for distances it never
+  saw.
+- **Descriptors carry structure, not just prose.** Each has `feature`,
+  `direction`, `zScore`, `value`, `reference` and `unit` as well as an English
+  `text`. `src/ui/DescriptorList.tsx` rebuilds the sentence from the structured
+  fields so UI copy stays in the dictionaries; `text` is only the fallback for a
+  feature this app has no phrasing for yet.
+- **Everything is JSON.** Embeddings are `readonly number[]`, and earshot's own
+  `quantize`/`dequantize` take them to and from int8 for storage.
+- **Profiles version themselves.** `schemaVersion` is checked on import;
+  `revision` is bumped by every `calibrate` and recorded on each check.
 
-When `earshot` tags its first release:
+## Models
 
-1. `pnpm add earshot@github:ezar/earshot#v0.1.0` — always a release tag, never a
-   branch. `earshot` ships TypeScript source (its `exports` point at `src/`), so
-   there is no build step and no install scripts, which keeps pnpm happy: it
-   blocks dependency lifecycle scripts by default, and the only allowance this
-   project needs is esbuild, declared in `pnpm-workspace.yaml`.
-2. Delete the `earshot` alias in `vite.config.ts` and in `vitest.config.ts`, and
-   the `earshot` entry under `paths` in `tsconfig.app.json`.
-3. Point `src/audio/entrypoints.ts` at the real entry points:
+earshot never hardcodes a model or WASM location, and nothing is fetched from a
+CDN at runtime. `pnpm models:fetch` puts everything under `public/models/`:
 
-   ```ts
-   import workerUrl from 'earshot/worker?worker&url'
-   import workletUrl from 'earshot/worklet?worker&url'
-   ```
+```
+public/models/
+  wasm/                      copied from the installed @mediapipe/tasks-audio
+  yamnet_classifier.tflite   downloaded, SHA-256 pinned in manifest.json
+  yamnet_embedder.tflite     downloaded, SHA-256 pinned in manifest.json
+```
 
-4. Delete `src/audio/earshot-stub/`.
-5. `pnpm typecheck`. Anything that comes back is real contract drift between
-   what SteadyHum expects and what `earshot` shipped — fix it in whichever
-   repository is wrong, and record the decision if the spec changes.
+Only `manifest.json` is committed; the ~36 MB of binaries are not. They are
+cached by the service worker on first use rather than precached on install.
 
-`earshot` stays in `optimizeDeps.exclude`: pre-bundling TypeScript source would
-break the worker and worklet entry points.
+## Two things that will bite
 
-## The contract
+Both are written up in full under `docs/decisions/`:
 
-`src/audio/earshot-stub/contract.ts` is the authoritative statement of what
-SteadyHum needs, with units on every numeric member. In summary:
+1. **MediaPipe is pinned at 0.10.21**, exactly, because `AudioEmbedder` is gone
+   from 0.10.34 onwards and the whole profile design depends on it
+   (`0003-mediapipe-is-pinned-for-the-audio-embedder.md`).
+2. **earshot's MediaPipe loader is patched at build time**, because its Worker
+   cannot be handed a `loadTasksAudio` and the bare specifier does not resolve in
+   a browser. The Vite plugin throws if earshot's source stops matching, and the
+   worker is built as a classic script so MediaPipe's `importScripts` works
+   (`0004-earshot-mediapipe-loader-is-patched-at-build-time.md`).
 
-**Constants** — `SAMPLE_RATE_HZ` (16 000), `WINDOW_SECONDS` (0.975),
-`HOP_SECONDS` (0.4875), `EMBEDDING_DIMENSIONS` (1024), `BAND_EDGES_HZ`.
+## Working against an unreleased earshot
 
-**Capture** — `createEngine({ workerUrl, workletUrl, modelsBaseUrl, wasmBaseUrl })`
-resolves to an `Engine`. `engine.startCapture()` resolves to a `Capture` that
-exposes `appliedConstraints` (so the app can warn when the browser ignored
-`noiseSuppression: false`), `subscribe(listener)` for live windows, and `stop()`
-for the full list.
-
-**Per window** — an `AnalysisWindow` carries `startSeconds`, `levelDbfs`, the
-1024-dimensional `embedding`, `topClasses`, the interpretable `features` of
-section 6.5, and `interference` (non-null when the noise guard rejected it).
-Raw audio never reaches the main thread.
-
-**Learning** — `learnProfile(sessions, options)` returns a `Profile`: discovered
-states with centroid, diagonal variance, distance percentiles, enrollment level
-distribution and descriptor baseline, plus `marginZ`, `cleanSeconds` and a
-`version` that every check records.
-
-**Scoring** — `scoreCheck(profile, windows)` returns a `CheckResult` with
-`status`, `score` (the 90th percentile of window z-scores), `confidence`,
-`matchedStateId`, `unmatchedState`, `discardedRatio`, `levelDeltaDb`, the
-`descriptors` that fired, and the per-window scores for the timeline.
-
-**Feedback** — `applyVerdict(profile, check, verdict)` returns the widened or
-tightened profile of section 6.7.
-
-All of it is plain data. SteadyHum stores it with Dexie; `earshot` never sees
-IndexedDB.
+`pnpm link ../earshot` locally, and never commit the link. Then tag a release in
+earshot and bump the tag here.

@@ -24,10 +24,7 @@
     /* No baseUrl: TypeScript 6 deprecates it and 7 drops it. Paths resolve
        relative to this file. */
     "paths": {
-      "@/*": ["./src/*"],
-      /* earshot seam: delete this mapping when the real package is installed.
-         See docs/earshot-integration.md and docs/decisions/0001-earshot-seam.md. */
-      "earshot": ["./src/audio/earshot-stub/index.ts"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src", "vite-env.d.ts"]

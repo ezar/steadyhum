@@ -1,15 +1,12 @@
 /**
- * The two earshot entry points that must be loaded as separate bundles.
+ * earshot's two out-of-band entry points.
  *
- * Vite rewrites `?worker&url` imports into URLs of standalone chunks, which is
- * what earshot's factories expect. This file is the only place that names them,
- * so pointing the app at the real package is a two-line edit here.
- *
- * With the real dependency installed these become:
- *   import workerUrl from 'earshot/worker?worker&url'
- *   import workletUrl from 'earshot/worklet?worker&url'
+ * The worker is TypeScript and Vite bundles it as a worker chunk. The capture
+ * worklet is deliberately plain JavaScript: `audioWorklet.addModule` hands the
+ * URL straight to the browser, so a `?worker&url` import of a `.ts` file would
+ * deliver TypeScript to the audio thread. It takes a plain `?url`.
  */
-import workerUrl from './earshot-stub/worker.ts?worker&url'
-import workletUrl from './earshot-stub/worklet.ts?worker&url'
+import workletUrl from 'earshot/capture-worklet?url'
+import workerUrl from 'earshot/worker?worker&url'
 
 export { workerUrl, workletUrl }

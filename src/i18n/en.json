@@ -27,12 +27,11 @@
     "learning": "Learning",
     "never-checked": "Never checked",
     "normal": "Normal",
-    "slightly-different": "Slightly different",
-    "different": "Different",
+    "watch": "Slightly different",
+    "anomalous": "Different",
     "unusable": "Unusable"
   },
   "confidence": {
-    "label": "Confidence",
     "low": "low",
     "medium": "medium",
     "high": "high"
@@ -93,7 +92,10 @@
     "noiseHint": "I hear a voice, wait a moment.",
     "musicHint": "I hear music or a TV, wait a moment.",
     "tooQuiet": "I can barely hear anything. Move the phone closer to the machine.",
-    "addMore": "You can add more sessions any time: the more there are, the tighter the warning."
+    "addMore": "You can add more sessions any time: the more there are, the tighter the warning.",
+    "tooLoud": "Something nearby is far too loud, wait a moment.",
+    "clipping": "The sound is clipping the microphone. Move the phone back a little.",
+    "learnFailed": "I could not learn a normal from these recordings. Try adding another session with the machine running."
   },
   "check": {
     "title": "Listen now",
@@ -105,12 +107,9 @@
   },
   "verdict": {
     "normal": "It sounds like it always does.",
-    "slightly-different": "It sounds slightly different.",
-    "different": "It sounds different.",
     "unusable": "I could not listen properly.",
     "unusableBody": "There was too much background noise in more than 40% of the recording. Try again somewhere quieter.",
     "matchedState": "This matches state {state} of the ones I learned.",
-    "unmatchedState": "This may be a phase I never heard during learning. If the machine was doing something new, add a session.",
     "addSession": "Add a learning session",
     "levelGuard": "The phone seems closer or farther than during learning.",
     "howItDiffers": "How it differs",
@@ -123,45 +122,49 @@
     "feedbackThanks": "Thanks. I will take that into account next time.",
     "undo": "Undo",
     "keepClip": "Keep the audio clip on this phone",
-    "comparedWith": "Compared with the normal learned on {date}"
+    "comparedWith": "Compared with the normal learned on {date}",
+    "watch": "It sounds slightly different.",
+    "anomalous": "It sounds different.",
+    "newState": "This may be a phase I never heard during learning. If the machine was doing something new, add a session."
   },
   "descriptor": {
-    "band-energy": {
-      "more": "More energy between {lowHz} and {highHz} Hz.",
-      "less": "Less energy between {lowHz} and {highHz} Hz.",
-      "new": "New energy has appeared between {lowHz} and {highHz} Hz.",
-      "gone": "The energy between {lowHz} and {highHz} Hz is gone."
+    "level": {
+      "higher": "It sounds louder than usual.",
+      "lower": "It sounds quieter than usual."
     },
-    "tonal-peak": {
-      "new": "A new steady tone near {frequencyHz} Hz (a whine).",
-      "gone": "The tone near {frequencyHz} Hz is gone.",
-      "more": "The tone near {frequencyHz} Hz is louder.",
-      "less": "The tone near {frequencyHz} Hz is quieter."
+    "spectralFlatness": {
+      "higher": "The sound is rougher or noisier than usual.",
+      "lower": "The sound is purer and more tonal than usual."
     },
-    "onset-periodicity": {
-      "new": "Regular knocks about {rateHz} times per second (rattle or imbalance).",
-      "gone": "The regular knocks are gone.",
-      "more": "The knocks are more frequent than before.",
-      "less": "The knocks are less frequent than before."
+    "spectralCentroidHz": {
+      "higher": "The sound is brighter than usual.",
+      "lower": "The sound is duller than usual."
     },
-    "spectral-flatness": {
-      "more": "The sound is rougher or noisier than before.",
-      "less": "The sound is cleaner than before.",
-      "new": "The sound has turned noisy.",
-      "gone": "The machine's background noise is gone."
+    "spectralFlux": {
+      "higher": "The sound is less steady: it changes more than usual.",
+      "lower": "The sound is steadier than usual."
     },
-    "spectral-centroid": {
-      "more": "The sound is higher pitched than before.",
-      "less": "The sound is deeper than before.",
-      "new": "The overall pitch has changed.",
-      "gone": "The overall pitch has changed."
+    "onsetPeriodicity": {
+      "higher": "The knocks are more regular than usual.",
+      "lower": "The knocks are less regular than usual."
     },
-    "amplitude-modulation": {
-      "new": "The hum pulses about {rateHz} times per second.",
-      "gone": "The hum no longer pulses.",
-      "more": "The hum pulses faster than before.",
-      "less": "The hum pulses slower than before."
-    }
+    "amplitudeModulationHz": {
+      "higher": "The hum pulses faster than usual.",
+      "lower": "The hum pulses slower than usual."
+    },
+    "amplitudeModulationDepth": {
+      "higher": "The hum pulses more strongly than usual.",
+      "lower": "The hum pulses less than usual."
+    },
+    "peakFrequencyHz": {
+      "higher": "The dominant tone is higher pitched than usual.",
+      "lower": "The dominant tone is lower pitched than usual."
+    },
+    "peakProminenceDb": {
+      "higher": "A whine or squeal stands out more than usual.",
+      "lower": "The usual whine stands out less."
+    },
+    "detail": "{value} {unit} against the usual {reference} {unit}"
   },
   "engine": {
     "title": "The audio engine is not available yet",

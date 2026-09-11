@@ -28,9 +28,9 @@ export class SteadyHumDatabase extends Dexie {
     super(name)
     this.version(1).stores({
       appliances: 'id, type, createdAt',
-      profiles: 'id, applianceId, [applianceId+active], version',
+      profiles: 'id, applianceId, [applianceId+active], revision',
       sessions: 'id, applianceId, kind, [applianceId+kind], startedAt',
-      windows: '++id, sessionId, startSeconds',
+      windows: '++id, sessionId',
       checks: 'id, applianceId, sessionId, createdAt, [applianceId+createdAt]',
       clips: 'id, sessionId, createdAt',
       calibrationLog: 'id, applianceId, checkId, createdAt',

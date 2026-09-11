@@ -1,3 +1,4 @@
+import { PROFILE_SCHEMA_VERSION } from 'earshot'
 import { describe, expect, it } from 'vitest'
 
 import { parseProfileExport, ProfileImportError } from './transfer.ts'
@@ -8,13 +9,15 @@ const valid = {
   exportedAt: '2026-03-03T10:00:00.000Z',
   appliance: { type: 'washing-machine', name: 'Lavadora', placementNote: 'En la balda' },
   profile: {
-    version: 4,
-    createdAt: '2026-03-01T10:00:00.000Z',
-    updatedAt: '2026-03-03T10:00:00.000Z',
+    schemaVersion: PROFILE_SCHEMA_VERSION,
+    revision: 4,
+    featureSpace: 'embedding',
+    dimensions: 1024,
     states: [{ id: 's1' }],
-    marginZ: 1,
-    cleanSeconds: 240,
-    sessionCount: 3,
+    thresholds: { watch: 0.4, anomalous: 0.7 },
+    windowCount: 420,
+    levelDbfs: { mean: -34, standardDeviation: 2 },
+    calibrations: [],
   },
 }
 
@@ -26,7 +29,7 @@ describe('parseProfileExport', () => {
   it('accepts a well-formed export', () => {
     const parsed = parseProfileExport(JSON.stringify(valid))
     expect(parsed.appliance.name).toBe('Lavadora')
-    expect(parsed.profile.version).toBe(4)
+    expect(parsed.profile.revision).toBe(4)
   })
 
   it('rejects anything that is not this format', () => {
@@ -44,5 +47,12 @@ describe('parseProfileExport', () => {
 
   it('rejects a profile with no states', () => {
     expectRejected({ ...valid, profile: { ...valid.profile, states: [] } }, 'missing-states')
+  })
+
+  it('rejects a profile written by a different earshot schema', () => {
+    expectRejected(
+      { ...valid, profile: { ...valid.profile, schemaVersion: PROFILE_SCHEMA_VERSION + 1 } },
+      'unsupported-profile-schema',
+    )
   })
 })

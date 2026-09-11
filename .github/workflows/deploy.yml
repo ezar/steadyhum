@@ -1,0 +1,55 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Pages needs these; the deploy job exchanges them for a deployment token.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never run two deployments at once, and let a newer push win — but let an
+# in-flight deployment finish rather than leaving the site half-published.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/configure-pages@v6
+        id: pages
+      - name: Fetch the models
+        # ~36 MB of YAMNet task files and the MediaPipe WASM runtime. They are
+        # not committed; this downloads them and verifies their checksums.
+        run: pnpm models:fetch
+      - name: Build
+        # configure-pages reports the site's real base path, so this works for a
+        # project site (/steadyhum/), a user site and a custom domain alike.
+        run: pnpm build
+        env:
+          BASE_PATH: ${{ steps.pages.outputs.base_path && format('{0}/', steps.pages.outputs.base_path) || '/' }}
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

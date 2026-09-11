@@ -1,7 +1,13 @@
 # 0001 — Ship an earshot stub until earshot has a release
 
-Status: accepted
+Status: superseded by the real dependency, 2026-09-11
 Date: 2026-09-11
+
+> earshot shipped v0.3.0 the same day. The stub was deleted and the app now
+> depends on `github:ezar/earshot#v0.3.0`. The record is kept because the drift
+> it predicted is exactly what happened: the real API splits capture from the
+> engine, keeps the guards separate, names its statuses `normal`/`watch`/
+> `anomalous` and scores in `[0, 1]`. See `docs/earshot-integration.md`.
 
 ## Context
 

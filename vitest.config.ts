@@ -8,7 +8,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': src(''),
-      earshot: src('audio/earshot-stub/index.ts'),
     },
   },
   test: {

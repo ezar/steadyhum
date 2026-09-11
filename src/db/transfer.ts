@@ -1,3 +1,4 @@
+import { PROFILE_SCHEMA_VERSION } from 'earshot'
 import type { Profile } from 'earshot'
 
 import { newId, nowIso } from '@/lib/id.ts'
@@ -88,12 +89,14 @@ export function parseProfileExport(raw: string): ProfileExport {
 
   const profile = parsed['profile']
   if (!isRecord(profile)) throw new ProfileImportError('missing-profile')
-  if (typeof profile['version'] !== 'number')
-    throw new ProfileImportError('missing-profile-version')
+  if (profile['schemaVersion'] !== PROFILE_SCHEMA_VERSION) {
+    throw new ProfileImportError('unsupported-profile-schema')
+  }
+  if (typeof profile['revision'] !== 'number') throw new ProfileImportError('missing-revision')
   if (!Array.isArray(profile['states']) || profile['states'].length === 0) {
     throw new ProfileImportError('missing-states')
   }
-  if (typeof profile['marginZ'] !== 'number') throw new ProfileImportError('missing-margin')
+  if (!isRecord(profile['thresholds'])) throw new ProfileImportError('missing-thresholds')
 
   return {
     format: PROFILE_EXPORT_FORMAT,

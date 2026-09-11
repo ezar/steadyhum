@@ -1,18 +1,24 @@
 #!/usr/bin/env node
 /**
- * Downloads the P0 models into public/models/ and verifies their checksums.
+ * Puts the models earshot needs into public/models/.
  *
- * The app must never depend on a third-party CDN at runtime for these files, so
- * they are self-hosted and cached by the service worker. The Vercel build runs
- * this before `vite build`.
+ * The two YAMNet `.tflite` files are downloaded and checked against the SHA-256
+ * pinned in manifest.json. The MediaPipe WASM runtime is copied out of the
+ * installed `@mediapipe/tasks-audio` package rather than downloaded, so it can
+ * never drift from the version the app was built against.
+ *
+ * The app must never depend on a third-party CDN at runtime for any of this, so
+ * everything is self-hosted and precached by the service worker. The deployment
+ * runs this before `vite build`, via `pnpm vercel-build`.
  *
  * Usage:
- *   node scripts/fetch-models.mjs              fetch what is missing, verify all
+ *   node scripts/fetch-models.mjs               fetch what is missing, verify all
  *   node scripts/fetch-models.mjs --verify-only verify without downloading
  *   node scripts/fetch-models.mjs --force       re-download everything
  */
 import { createHash } from 'node:crypto'
-import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
+import { access, cp, mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
+import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -44,20 +50,48 @@ async function download(url) {
   return Buffer.from(await response.arrayBuffer())
 }
 
+/**
+ * Resolves the wasm directory of the installed @mediapipe/tasks-audio.
+ *
+ * The package does not expose `./package.json` in its `exports`, so the package
+ * root is derived from its main entry, which sits at the root. Resolution is
+ * anchored at this project so pnpm's virtual store is followed correctly.
+ */
+function resolveWasmSource(spec) {
+  const [scope, name, ...rest] = spec.split('/')
+  const pkg = spec.startsWith('@') ? `${scope}/${name}` : scope
+  const subpath = spec.startsWith('@') ? rest : [name, ...rest]
+  const require = createRequire(join(rootDir, 'package.json'))
+  return join(dirname(require.resolve(pkg)), ...subpath)
+}
+
+async function syncWasm(entry) {
+  const target = join(modelsDir, entry.to)
+  const source = resolveWasmSource(entry.from)
+
+  if (verifyOnly) {
+    if (!(await exists(target))) throw new Error(`missing: ${entry.to}/`)
+    console.log(`ok: ${entry.to}/ present`)
+    return
+  }
+
+  await cp(source, target, { recursive: true, force: true })
+  const copied = await readdir(target)
+  console.log(`ok: ${entry.to}/ (${copied.length} files from ${entry.from})`)
+}
+
 async function main() {
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
   await mkdir(modelsDir, { recursive: true })
 
-  let failures = 0
-  let unpinned = 0
+  const failures = []
 
   for (const entry of manifest.files) {
     const target = join(modelsDir, entry.name)
     const present = await exists(target)
 
     if (!present && verifyOnly) {
-      console.error(`missing: ${entry.name}`)
-      failures += 1
+      failures.push(`missing: ${entry.name}`)
       continue
     }
 
@@ -72,24 +106,23 @@ async function main() {
     }
 
     const digest = sha256(bytes)
-    if (entry.sha256 === '') {
-      console.warn(`unpinned: ${entry.name} sha256 is ${digest} — paste it into manifest.json`)
-      unpinned += 1
-    } else if (entry.sha256 !== digest) {
-      console.error(`checksum mismatch: ${entry.name} expected ${entry.sha256}, got ${digest}`)
-      failures += 1
+    if (entry.sha256 !== digest) {
+      failures.push(`checksum mismatch: ${entry.name} expected ${entry.sha256}, got ${digest}`)
     } else {
       console.log(`ok: ${entry.name} (${(bytes.byteLength / 1e6).toFixed(1)} MB)`)
     }
   }
 
-  if (failures > 0) {
-    console.error(`${failures} model file(s) failed verification`)
-    process.exitCode = 1
-    return
+  try {
+    await syncWasm(manifest.wasm)
+  } catch (error) {
+    failures.push(error.message)
   }
-  if (unpinned > 0) {
-    console.warn(`${unpinned} model file(s) have no pinned checksum yet`)
+
+  if (failures.length > 0) {
+    for (const failure of failures) console.error(failure)
+    console.error(`${failures.length} model asset(s) failed`)
+    process.exitCode = 1
   }
 }
 

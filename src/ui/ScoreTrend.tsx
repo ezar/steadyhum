@@ -5,8 +5,8 @@ import { useT } from '@/i18n/context.ts'
 
 const WIDTH = 320
 const HEIGHT = 96
-/** Window scores are clipped to [0, 8] z by the scorer (section 6.4). */
-const MAX_SCORE = 8
+/** earshot reports check scores in [0, 1]. */
+const MAX_SCORE = 1
 
 /**
  * Check scores over time. A slowly rising line across weeks is the early
@@ -15,7 +15,7 @@ const MAX_SCORE = 8
  */
 export function ScoreTrend({ checks }: { readonly checks: readonly StoredCheck[] }): ReactNode {
   const t = useT()
-  const scored = [...checks].reverse().filter((check) => check.status !== 'unusable')
+  const scored = [...checks].reverse().filter((check) => !check.unusable)
 
   if (scored.length < 2) {
     return <p className="text-ink-faint">{t('appliance.noChecks')}</p>

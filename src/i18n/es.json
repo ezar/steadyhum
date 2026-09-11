@@ -27,12 +27,11 @@
     "learning": "Aprendiendo",
     "never-checked": "Sin comprobar",
     "normal": "Normal",
-    "slightly-different": "Algo distinto",
-    "different": "Distinto",
+    "watch": "Algo distinto",
+    "anomalous": "Distinto",
     "unusable": "No utilizable"
   },
   "confidence": {
-    "label": "Confianza",
     "low": "baja",
     "medium": "media",
     "high": "alta"
@@ -93,7 +92,10 @@
     "noiseHint": "Oigo una voz, espera un momento.",
     "musicHint": "Oigo música o la tele, espera un momento.",
     "tooQuiet": "Casi no oigo nada. Acerca el móvil a la máquina.",
-    "addMore": "Puedes añadir más sesiones cuando quieras: cuantas más, más ajustado será el aviso."
+    "addMore": "Puedes añadir más sesiones cuando quieras: cuantas más, más ajustado será el aviso.",
+    "tooLoud": "Hay un sonido demasiado fuerte cerca, espera un momento.",
+    "clipping": "El sonido satura el micrófono. Aleja un poco el móvil.",
+    "learnFailed": "No he podido aprender el normal con estas grabaciones. Prueba a añadir otra sesión con la máquina funcionando."
   },
   "check": {
     "title": "Escuchar ahora",
@@ -105,12 +107,9 @@
   },
   "verdict": {
     "normal": "Suena como siempre.",
-    "slightly-different": "Suena algo distinto.",
-    "different": "Suena distinto.",
     "unusable": "No he podido escuchar bien.",
     "unusableBody": "Había demasiado ruido de fondo en más del 40 % de la grabación. Prueba otra vez con menos ruido.",
     "matchedState": "Se parece al estado {state} de los que aprendí.",
-    "unmatchedState": "Puede que sea una fase que no escuché durante el aprendizaje. Si la máquina estaba haciendo algo nuevo, añade una sesión.",
     "addSession": "Añadir sesión de aprendizaje",
     "levelGuard": "El móvil parece estar más cerca o más lejos que cuando aprendí.",
     "howItDiffers": "En qué se diferencia",
@@ -123,45 +122,49 @@
     "feedbackThanks": "Gracias. Lo tendré en cuenta la próxima vez.",
     "undo": "Deshacer",
     "keepClip": "Guardar el fragmento de audio en este móvil",
-    "comparedWith": "Comparado con el normal aprendido el {date}"
+    "comparedWith": "Comparado con el normal aprendido el {date}",
+    "watch": "Suena algo distinto.",
+    "anomalous": "Suena distinto.",
+    "newState": "Puede que sea una fase que no escuché durante el aprendizaje. Si la máquina estaba haciendo algo nuevo, añade una sesión."
   },
   "descriptor": {
-    "band-energy": {
-      "more": "Más energía en la banda de {lowHz} a {highHz} Hz.",
-      "less": "Menos energía en la banda de {lowHz} a {highHz} Hz.",
-      "new": "Aparece energía nueva entre {lowHz} y {highHz} Hz.",
-      "gone": "Ha desaparecido la energía entre {lowHz} y {highHz} Hz."
+    "level": {
+      "higher": "Suena más fuerte de lo normal.",
+      "lower": "Suena más flojo de lo normal."
     },
-    "tonal-peak": {
-      "new": "Un tono nuevo y constante cerca de {frequencyHz} Hz (un silbido).",
-      "gone": "Ya no está el tono cerca de {frequencyHz} Hz.",
-      "more": "El tono cerca de {frequencyHz} Hz suena más fuerte.",
-      "less": "El tono cerca de {frequencyHz} Hz suena más flojo."
+    "spectralFlatness": {
+      "higher": "El sonido es más áspero o ruidoso que de costumbre.",
+      "lower": "El sonido es más puro y con más tono que de costumbre."
     },
-    "onset-periodicity": {
-      "new": "Golpes regulares unas {rateHz} veces por segundo (traqueteo o desequilibrio).",
-      "gone": "Han desaparecido los golpes regulares.",
-      "more": "Los golpes son más frecuentes que antes.",
-      "less": "Los golpes son menos frecuentes que antes."
+    "spectralCentroidHz": {
+      "higher": "El sonido es más agudo que de costumbre.",
+      "lower": "El sonido es más grave que de costumbre."
     },
-    "spectral-flatness": {
-      "more": "El sonido es más áspero o ruidoso que antes.",
-      "less": "El sonido es más limpio que antes.",
-      "new": "El sonido se ha vuelto ruidoso.",
-      "gone": "El ruido de fondo de la máquina ha desaparecido."
+    "spectralFlux": {
+      "higher": "El sonido es menos estable: cambia más de lo normal.",
+      "lower": "El sonido es más estable de lo normal."
     },
-    "spectral-centroid": {
-      "more": "El sonido es más agudo que antes.",
-      "less": "El sonido es más grave que antes.",
-      "new": "El tono general ha cambiado.",
-      "gone": "El tono general ha cambiado."
+    "onsetPeriodicity": {
+      "higher": "Los golpes son más regulares que de costumbre.",
+      "lower": "Los golpes son menos regulares que de costumbre."
     },
-    "amplitude-modulation": {
-      "new": "El zumbido late unas {rateHz} veces por segundo.",
-      "gone": "El zumbido ya no late.",
-      "more": "El zumbido late más rápido que antes.",
-      "less": "El zumbido late más despacio que antes."
-    }
+    "amplitudeModulationHz": {
+      "higher": "El zumbido late más rápido que de costumbre.",
+      "lower": "El zumbido late más despacio que de costumbre."
+    },
+    "amplitudeModulationDepth": {
+      "higher": "El zumbido pulsa con más fuerza que de costumbre.",
+      "lower": "El zumbido pulsa menos que de costumbre."
+    },
+    "peakFrequencyHz": {
+      "higher": "El tono dominante es más agudo que de costumbre.",
+      "lower": "El tono dominante es más grave que de costumbre."
+    },
+    "peakProminenceDb": {
+      "higher": "Destaca más un silbido o chirrido sobre el resto.",
+      "lower": "El silbido habitual destaca menos."
+    },
+    "detail": "{value} {unit} frente a {reference} {unit} de costumbre"
   },
   "engine": {
     "title": "El motor de audio todavía no está disponible",

@@ -25,17 +25,17 @@ function session(overrides: Partial<Session>): Session {
   }
 }
 
-function check(status: StoredCheck['status']): StoredCheck {
+function check(status: StoredCheck['status'], unusable = false): StoredCheck {
   return {
     id: crypto.randomUUID(),
     applianceId: 'a1',
     sessionId: 's1',
-    profileVersion: 1,
+    profileRevision: 1,
     status,
-    score: 1,
-    confidence: 'high',
-    matchedStateId: null,
-    unmatchedState: false,
+    unusable,
+    score: 0.2,
+    dominantStateId: 's-0',
+    anomalousFraction: 0,
     levelDeltaDb: 0,
     discardedRatio: 0,
     descriptors: [],
@@ -94,7 +94,7 @@ describe('deriveStatus', () => {
   ])
 
   it('reports learning until the normal is learned', () => {
-    expect(deriveStatus(summariseEnrollment([]), check('different'))).toBe('learning')
+    expect(deriveStatus(summariseEnrollment([]), check('anomalous'))).toBe('learning')
   })
 
   it('reports never-checked once learned with no checks', () => {
@@ -102,7 +102,13 @@ describe('deriveStatus', () => {
   })
 
   it('mirrors the last check otherwise', () => {
-    expect(deriveStatus(learned, check('slightly-different'))).toBe('slightly-different')
+    expect(deriveStatus(learned, check('watch'))).toBe('watch')
+  })
+
+  it('reports unusable over the score when the guards spoiled the check', () => {
+    // earshot still returns a status for a spoiled recording; SteadyHum is the
+    // one that decides the verdict should not be shown.
+    expect(deriveStatus(learned, check('anomalous', true))).toBe('unusable')
   })
 })
 
@@ -121,22 +127,27 @@ describe('appliance lifecycle', () => {
     await db.sessions.add(stored)
     await db.windows.add({
       sessionId: stored.id,
-      startSeconds: 0,
-      levelDbfs: -30,
-      embedding: new Int8Array(1024),
-      embeddingScale: 1,
-      topClasses: [],
-      features: {
-        bandEnergyDbfs: [],
-        tonalPeaks: [],
-        onsetRateHz: 0,
-        onsetPeriodicityHz: null,
-        spectralFlatness: 0,
-        spectralCentroidHz: 0,
-        modulationRateHz: null,
-        modulationDepth: 0,
+      window: {
+        t: 0,
+        rmsDbfs: -30,
+        classes: [],
+        features: {
+          rmsDbfs: -30,
+          logMel: [],
+          bands: [],
+          peaks: [],
+          spectralFlatness: 0,
+          spectralCentroidHz: 0,
+          spectralFlux: 0,
+          onsets: [],
+          onsetPeriodicity: 0,
+          onsetPeriodSeconds: 0,
+          amplitudeModulationHz: 0,
+          amplitudeModulationDepth: 0,
+        },
       },
-      interference: null,
+      embedding: { format: 'int8', dimensions: 1024, data: '', scale: 1 },
+      rejectedFor: [],
     })
 
     await deleteAppliance(appliance.id)
