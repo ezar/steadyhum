@@ -103,67 +103,70 @@ export function useWatch(applianceId: string): Watcher {
    */
   const token = useRef(0)
 
-  const persist = useCallback(async (): Promise<void> => {
-    const current = record.current
-    if (current === null || current.saving || current.saved) return
-    /*
-     * A session that heard nothing is not a session.
-     *
-     * Backing out while the engine is still loading is the common way to get
-     * here, and a row of zeroes in the history says something happened when
-     * nothing did.
-     */
-    if (current.total === 0) {
-      current.saved = true
-      return
-    }
-    /*
-     * `saving` stops the second caller — stopping and then unmounting — from
-     * inserting the same session twice. `saved` is set only once the write has
-     * landed, so a rejected transaction can still be retried on unmount.
-     *
-     * That retry only works if `saving` is cleared on the way out as well as on
-     * success: leaving it set after a rejection blocks the retry just as surely
-     * as a wrongly-set `saved` did, and loses the session the same way. Hence
-     * the finally.
-     */
-    current.saving = true
+  const persist = useCallback(
+    async (target?: SessionRecord | null): Promise<void> => {
+      const current = target === undefined ? record.current : target
+      if (current === null || current.saving || current.saved) return
+      /*
+       * A session that heard nothing is not a session.
+       *
+       * Backing out while the engine is still loading is the common way to get
+       * here, and a row of zeroes in the history says something happened when
+       * nothing did.
+       */
+      if (current.total === 0) {
+        current.saved = true
+        return
+      }
+      /*
+       * `saving` stops the second caller — stopping and then unmounting — from
+       * inserting the same session twice. `saved` is set only once the write has
+       * landed, so a rejected transaction can still be retried on unmount.
+       *
+       * That retry only works if `saving` is cleared on the way out as well as on
+       * success: leaving it set after a rejection blocks the retry just as surely
+       * as a wrongly-set `saved` did, and loses the session the same way. Hence
+       * the finally.
+       */
+      current.saving = true
 
-    const rows: WatchSegment[] = current.segments.map((segment) => ({
-      id: newId(),
-      sessionId: current.id,
-      applianceId,
-      startSeconds: segment.startSeconds,
-      endSeconds: segment.endSeconds,
-      peakScore: segment.peakScore,
-      status: segment.status,
-      dominantStateId: segment.dominantStateId,
-      fromDrift: segment.fromDrift,
-      createdAt: nowIso(),
-    }))
+      const rows: WatchSegment[] = current.segments.map((segment) => ({
+        id: newId(),
+        sessionId: current.id,
+        applianceId,
+        startSeconds: segment.startSeconds,
+        endSeconds: segment.endSeconds,
+        peakScore: segment.peakScore,
+        status: segment.status,
+        dominantStateId: segment.dominantStateId,
+        fromDrift: segment.fromDrift,
+        createdAt: nowIso(),
+      }))
 
-    try {
-      await db.transaction('rw', [db.sessions, db.watchSegments], async () => {
-        await db.sessions.add({
-          id: current.id,
-          applianceId,
-          kind: 'watch',
-          startedAt: current.startedAt,
-          endedAt: nowIso(),
-          // Windows overlap by half, so each accepted one is a hop of genuinely
-          // new audio — not a whole window, and certainly not one second.
-          cleanSeconds: current.clean * HOP_SECONDS,
-          totalWindows: current.total,
-          discardedWindows: current.discarded,
-          statesDiscovered: null,
+      try {
+        await db.transaction('rw', [db.sessions, db.watchSegments], async () => {
+          await db.sessions.add({
+            id: current.id,
+            applianceId,
+            kind: 'watch',
+            startedAt: current.startedAt,
+            endedAt: nowIso(),
+            // Windows overlap by half, so each accepted one is a hop of genuinely
+            // new audio — not a whole window, and certainly not one second.
+            cleanSeconds: current.clean * HOP_SECONDS,
+            totalWindows: current.total,
+            discardedWindows: current.discarded,
+            statesDiscovered: null,
+          })
+          if (rows.length > 0) await db.watchSegments.bulkAdd(rows)
         })
-        if (rows.length > 0) await db.watchSegments.bulkAdd(rows)
-      })
-      current.saved = true
-    } finally {
-      current.saving = false
-    }
-  }, [applianceId])
+        current.saved = true
+      } finally {
+        current.saving = false
+      }
+    },
+    [applianceId],
+  )
 
   const releaseWakeLock = useCallback(() => {
     const held = wakeLock.current
@@ -235,6 +238,23 @@ export function useWatch(applianceId: string): Watcher {
   const start = useCallback(() => {
     if (session.current !== null) return
     const mine = (token.current += 1)
+
+    /*
+     * Do not let a new session overwrite one whose write failed.
+     *
+     * `finish()` clears session.current and the screen offers "watch again", so
+     * nothing stops the user pressing it after a storage error. Replacing the
+     * record would drop the only reference to that session and with it the
+     * retry the saving/saved split exists to provide — so try it once more
+     * first. If it fails again the storage is genuinely unavailable, and
+     * refusing to let them watch would not help.
+     */
+    const unsaved = record.current
+    if (unsaved !== null && !unsaved.saved && unsaved.total > 0) {
+      void persist(unsaved).catch((error: unknown) => {
+        console.error('could not save the previous watch session', error)
+      })
+    }
 
     setState({ ...IDLE, watching: true })
     record.current = {
@@ -338,7 +358,7 @@ export function useWatch(applianceId: string): Watcher {
       console.error('watch session failed to start', error)
       setState({ ...IDLE, error: error instanceof Error ? error.message : String(error) })
     })
-  }, [acquireWakeLock, applianceId, releaseWakeLock])
+  }, [acquireWakeLock, applianceId, persist, releaseWakeLock])
 
   // The browser drops the wake lock whenever the page is hidden, and does not
   // give it back. Without this the screen quietly stops being held awake while
