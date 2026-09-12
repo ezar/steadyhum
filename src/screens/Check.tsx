@@ -118,6 +118,8 @@ export function Check(): ReactNode {
         ) : (
           <Verdict
             applianceId={appliance.id}
+            applianceName={appliance.name}
+            applianceType={t(`applianceType.${appliance.type}`)}
             check={check}
             enrollment={enrollment}
             onRetry={handleStart}

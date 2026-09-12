@@ -137,6 +137,11 @@ export function ApplianceDetail(): ReactNode {
                 <Button>{t('home.listenNow')}</Button>
               </Link>
             )}
+            {enrollment.learned && (
+              <Link to={`/appliances/${appliance.id}/watch`}>
+                <Button variant="secondary">{t('home.watchNow')}</Button>
+              </Link>
+            )}
             <Link to={`/appliances/${appliance.id}/learn`}>
               <Button variant="secondary">{t('appliance.relearn')}</Button>
             </Link>

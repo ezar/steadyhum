@@ -23,3 +23,18 @@ export function formatDateTime(iso: string, locale: Locale): string {
 export function formatSeconds(seconds: number): string {
   return Math.round(seconds).toString()
 }
+
+/**
+ * Elapsed time as a clock, for a session that may run for hours.
+ *
+ * Hours appear only once there are any: "4:07" reads faster than "0:04:07",
+ * and a watch session is usually minutes.
+ */
+export function formatDuration(seconds: number): string {
+  const total = Math.max(0, Math.floor(seconds))
+  const hours = Math.floor(total / 3600)
+  const minutes = Math.floor((total % 3600) / 60)
+  const rest = total % 60
+  const pad = (value: number): string => value.toString().padStart(2, '0')
+  return hours > 0 ? `${hours}:${pad(minutes)}:${pad(rest)}` : `${minutes}:${pad(rest)}`
+}

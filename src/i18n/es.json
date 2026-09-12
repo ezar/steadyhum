@@ -22,7 +22,8 @@
     "settings": "Ajustes",
     "privacy": "Privacidad",
     "about": "Acerca de",
-    "help": "Ayuda"
+    "help": "Ayuda",
+    "watch": "Vigilar"
   },
   "status": {
     "learning": "Aprendiendo",
@@ -64,7 +65,8 @@
     "addAppliance": "Añadir electrodoméstico",
     "listenNow": "Escuchar ahora",
     "lastCheck": "Última comprobación: {when}",
-    "learnFirst": "Aprender su normal"
+    "learnFirst": "Aprender su normal",
+    "watchNow": "Vigilar"
   },
   "addAppliance": {
     "title": "Añadir electrodoméstico",
@@ -298,5 +300,41 @@
         "a": "No. SteadyHum es una pista, no un diagnóstico, y no es un dispositivo de seguridad. Cualquier aparato de gas lo tiene que revisar un técnico certificado, huela raro o no, diga esta app lo que diga."
       }
     }
+  },
+  "share": {
+    "action": "Compartir el resultado",
+    "preparing": "Preparando la imagen…",
+    "failed": "No he podido crear la imagen.",
+    "downloaded": "Imagen guardada en tus descargas.",
+    "shareTitle": "{name} · SteadyHum",
+    "fileName": "steadyhum-{name}.png",
+    "cardDisclaimer": "SteadyHum compara el sonido actual con el que aprendió de esta máquina cuando funcionaba bien. Indica que algo ha cambiado, no qué está averiado: no es un diagnóstico. Los aparatos de gas los debe revisar un técnico certificado.",
+    "cardMadeWith": "Hecho con SteadyHum · el audio no sale del móvil",
+    "cardNoDifferences": "Sin diferencias reseñables frente a su normal."
+  },
+  "watch": {
+    "title": "Vigilar",
+    "intro": "Escucha de forma continua y te avisa si el sonido se aleja de su normal. Deja el móvil donde siempre, enchufado.",
+    "start": "Empezar a vigilar",
+    "stop": "Parar",
+    "listening": "Vigilando",
+    "elapsed": "Lleva {time}",
+    "needsProfile": "Primero enséñale a SteadyHum cómo suena cuando está bien.",
+    "timelineLabel": "Línea de tiempo de la vigilancia",
+    "screenAwake": "Mantendré la pantalla encendida.",
+    "screenMaySleep": "Este navegador no me deja mantener la pantalla encendida. Si se apaga, la vigilancia puede detenerse.",
+    "drift": "El sonido lleva un rato subiendo poco a poco. No es un pico: es una deriva.",
+    "segments": "Episodios",
+    "noSegments": "Nada que reseñar por ahora.",
+    "segment": "De {start} a {end} · {status}",
+    "segmentDrift": "De {start} a {end} · deriva",
+    "summaryTitle": "Resumen de la vigilancia",
+    "summaryDuration": "Duración: {time}",
+    "summaryNone": "No he oído nada que se salga de su normal.",
+    "summaryCount": "{count} episodios fuera de lo normal.",
+    "summaryCount_one": "1 episodio fuera de lo normal.",
+    "again": "Vigilar otra vez",
+    "honest": "Un episodio significa que sonó distinto, no que haya una avería.",
+    "failed": "No he podido empezar a vigilar. Comprueba el permiso del micrófono y vuelve a intentarlo."
   }
 }

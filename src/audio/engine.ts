@@ -35,8 +35,24 @@ export interface GuardedWindow {
 export interface Listening {
   /** What the browser actually applied; `unhonoured` lists the flags it kept on. */
   readonly appliedConstraints: AppliedConstraints
-  /** Stops the microphone and resolves with every window produced. */
+  /**
+   * Stops the microphone and resolves with every window produced — or with
+   * nothing, when the session was started with `retainWindows: false`.
+   */
   stop: () => Promise<readonly GuardedWindow[]>
+}
+
+export interface ListenOptions {
+  /**
+   * Keep every window so `stop()` can return them. On by default, because
+   * enrolment and checks both score the whole recording at the end.
+   *
+   * Watch mode must turn it off. It runs for hours, and each window carries a
+   * 1024-number embedding: a two hour session would hold roughly fifteen
+   * thousand of them in memory at once, for a consumer that scores each window
+   * as it arrives and never looks back.
+   */
+  readonly retainWindows?: boolean
 }
 
 export type EngineAvailability =
@@ -82,7 +98,11 @@ export async function closeEngine(): Promise<void> {
  *
  * @param onWindow Called once per analysis window, roughly every `HOP_SECONDS`.
  */
-export async function listen(onWindow: (result: GuardedWindow) => void): Promise<Listening> {
+export async function listen(
+  onWindow: (result: GuardedWindow) => void,
+  options: ListenOptions = {},
+): Promise<Listening> {
+  const retainWindows = options.retainWindows ?? true
   const instance = await getEngine()
 
   /*
@@ -115,7 +135,7 @@ export async function listen(onWindow: (result: GuardedWindow) => void): Promise
 
   const offWindow = instance.onWindow((window) => {
     const result: GuardedWindow = { window, guard: window.guard ?? fallback.check(window) }
-    collected.push(result)
+    if (retainWindows) collected.push(result)
     onWindow(result)
   })
 

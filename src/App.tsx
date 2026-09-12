@@ -10,6 +10,7 @@ import { Home } from './screens/Home.tsx'
 import { NotFound } from './screens/NotFound.tsx'
 import { Privacy } from './screens/Privacy.tsx'
 import { Settings } from './screens/Settings.tsx'
+import { Watch } from './screens/Watch.tsx'
 import { Welcome } from './screens/Welcome.tsx'
 
 export function App(): ReactNode {
@@ -30,6 +31,7 @@ export function App(): ReactNode {
         <Route path="/appliances/:applianceId" element={<ApplianceDetail />} />
         <Route path="/appliances/:applianceId/learn" element={<Enroll />} />
         <Route path="/appliances/:applianceId/check" element={<Check />} />
+        <Route path="/appliances/:applianceId/watch" element={<Watch />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/help" element={<Help />} />
         <Route path="/privacy" element={<Privacy />} />
