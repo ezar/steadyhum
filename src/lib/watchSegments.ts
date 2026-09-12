@@ -82,7 +82,13 @@ export function createSegmentTracker(graceSeconds = 5): SegmentTracker {
                 // Report the worst it got, not the state it happened to end in.
                 status: worse(open.status, tick.status),
                 dominantStateId: tick.dominantStateId,
-                fromDrift: open.fromDrift && tick.drifting,
+                /*
+                 * Drift is the claim "nothing sounds wrong, the baseline is
+                 * climbing". The moment something does sound wrong the label
+                 * stops being true, so it needs the same condition the segment
+                 * was opened under, not just `drifting`.
+                 */
+                fromDrift: open.fromDrift && tick.drifting && tick.status === 'normal',
               }
         return null
       }

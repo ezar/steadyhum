@@ -63,7 +63,16 @@ export async function updatePlacementNote(id: string, placementNote: string): Pr
 export async function deleteAppliance(id: string): Promise<void> {
   await db.transaction(
     'rw',
-    [db.appliances, db.profiles, db.sessions, db.windows, db.checks, db.clips, db.calibrationLog],
+    [
+      db.appliances,
+      db.profiles,
+      db.sessions,
+      db.windows,
+      db.checks,
+      db.clips,
+      db.calibrationLog,
+      db.watchSegments,
+    ],
     async () => {
       const sessions = await db.sessions.where('applianceId').equals(id).toArray()
       const sessionIds = sessions.map((session) => session.id)
@@ -73,6 +82,7 @@ export async function deleteAppliance(id: string): Promise<void> {
       await db.profiles.where('applianceId').equals(id).delete()
       await db.checks.where('applianceId').equals(id).delete()
       await db.calibrationLog.where('applianceId').equals(id).delete()
+      await db.watchSegments.where('applianceId').equals(id).delete()
       await db.appliances.delete(id)
     },
   )

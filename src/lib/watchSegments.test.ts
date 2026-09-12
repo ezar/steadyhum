@@ -95,6 +95,20 @@ describe('createSegmentTracker', () => {
     expect(tracker.finish()?.fromDrift).toBe(false)
   })
 
+  it('stops calling it drift even while the drift itself continues', () => {
+    // The version of this test that flipped `drifting` to false passed against
+    // a tracker that only checked `drifting` on extension, so it proved
+    // nothing. Drift means "nothing sounds wrong, the baseline is climbing";
+    // once something does sound wrong the label is simply untrue, whatever the
+    // drift detector still says.
+    const tracker = createSegmentTracker()
+    tracker.push(tick(0, { drifting: true }))
+    tracker.push(abnormal(1, { drifting: true }))
+    const closed = tracker.finish()
+    expect(closed?.fromDrift).toBe(false)
+    expect(closed?.status).toBe('anomalous')
+  })
+
   it('closes whatever is open when the session ends', () => {
     const tracker = createSegmentTracker()
     tracker.push(abnormal(5))

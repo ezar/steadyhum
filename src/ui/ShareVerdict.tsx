@@ -92,8 +92,19 @@ export function ShareVerdict({
     const anchor = document.createElement('a')
     anchor.href = url
     anchor.download = fileName
+    document.body.append(anchor)
     anchor.click()
-    URL.revokeObjectURL(url)
+    anchor.remove()
+    /*
+     * Revoke on the next turn, not now.
+     *
+     * The download is started asynchronously, and revoking in the same tick can
+     * pull the blob out from under it. This is the path Firefox always takes,
+     * since it has neither share nor canShare.
+     */
+    setTimeout(() => {
+      URL.revokeObjectURL(url)
+    }, 0)
     setOutcome('downloaded')
   }
 
