@@ -50,16 +50,36 @@ export function Welcome(): ReactNode {
   const setOnboarded = useSettings((state) => state.setOnboarded)
   const [index, setIndex] = useState(0)
 
+  /*
+   * Someone already onboarded who is looking at this screen asked for it, from
+   * Help — nothing else routes here once the flag is set. That makes them a
+   * reader rather than a new user: they get "close" instead of "skip", and go
+   * back to Help rather than being pushed into adding an appliance.
+   *
+   * Read once at mount, not on every render: the first-run flow sets the flag
+   * itself just before navigating away, which would otherwise flip this screen
+   * into replay mode for the frame in between.
+   */
+  const [replay] = useState(() => useSettings.getState().onboarded)
+
   const step = STEPS[index]
   if (step === undefined) return null
   const last = index === STEPS.length - 1
 
   function finish(): void {
+    if (replay) {
+      void navigate('/help', { replace: true })
+      return
+    }
     setOnboarded(true)
     void navigate('/appliances/new', { replace: true })
   }
 
   function dismiss(): void {
+    if (replay) {
+      void navigate('/help', { replace: true })
+      return
+    }
     setOnboarded(true)
     void navigate('/', { replace: true })
   }
@@ -71,7 +91,7 @@ export function Welcome(): ReactNode {
           {t('welcome.step', { current: index + 1, total: STEPS.length })}
         </p>
         <Button variant="ghost" onClick={dismiss}>
-          {t('welcome.skip')}
+          {replay ? t('welcome.close') : t('welcome.skip')}
         </Button>
       </header>
 
@@ -116,7 +136,7 @@ export function Welcome(): ReactNode {
                 }
           }
         >
-          {last ? t('welcome.start') : t('welcome.next')}
+          {last ? (replay ? t('welcome.done') : t('welcome.start')) : t('welcome.next')}
         </Button>
       </footer>
     </div>

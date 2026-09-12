@@ -97,6 +97,12 @@ export function Settings(): ReactNode {
           )}
         </Card>
 
+        <Link to="/help">
+          <Button variant="secondary" size="lg">
+            {t('nav.help')}
+          </Button>
+        </Link>
+
         <Link to="/privacy">
           <Button variant="ghost" size="lg">
             {t('nav.privacy')}

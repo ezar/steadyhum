@@ -116,3 +116,68 @@ test('introduces itself once, then stays out of the way', async ({ page }) => {
     page.getByRole('heading', { name: /tus electrodomésticos|your appliances/i }),
   ).toBeVisible()
 })
+
+/**
+ * The introduction is shown once, which means it also has to be reachable
+ * again. Replaying it must not behave like a first run: neither way out of it
+ * may push the reader into adding an appliance, and — the part worth guarding —
+ * it must not leave them seeing it on every visit afterwards.
+ *
+ * Both exits are exercised deliberately. They are separate code paths, and a
+ * test that only takes the header one passes with the footer one broken: that
+ * is exactly the hole this test had on its first draft.
+ */
+test('the introduction can be read again from Help, without becoming first-run again', async ({
+  page,
+}) => {
+  await skipIntroduction(page)
+
+  await page.getByRole('link', { name: /ayuda|help/i }).click()
+  await expect(page).toHaveURL(/\/help$/)
+
+  await page.getByRole('link', { name: /ver la introducción|see the introduction/i }).click()
+  await expect(page).toHaveURL(/\/welcome$/)
+  await expect(
+    page.getByText(/no te va a decir qué está roto|will not tell you what is broken/i),
+  ).toBeVisible()
+
+  // Read to the end and leave by the primary button. For a new user this is
+  // "Empezar" and lands on add-appliance; a reader gets "Cerrar" and Help.
+  await page.getByRole('button', { name: /siguiente|next/i }).click()
+  await page.getByRole('button', { name: /siguiente|next/i }).click()
+  await page.locator('footer').getByRole('button').click()
+  await expect(page).toHaveURL(/\/help$/)
+
+  // And the header exit, which a reader is more likely to take part-way
+  // through, goes to the same place rather than dumping them on Home.
+  await page.getByRole('link', { name: /ver la introducción|see the introduction/i }).click()
+  await expect(page).toHaveURL(/\/welcome$/)
+  await page.locator('header').getByRole('button').click()
+  await expect(page).toHaveURL(/\/help$/)
+
+  // Home still belongs to them: replaying must not have reset the flag.
+  await page.goto('./')
+  await expect(page).toHaveURL(/\/(steadyhum\/)?$/)
+})
+
+/**
+ * Help has to carry the answers the app itself refuses to give — above all the
+ * honest limit, which is the whole product principle and the first thing a
+ * confused user goes looking for.
+ */
+test('help answers the questions the app provokes', async ({ page }) => {
+  await skipIntroduction(page)
+  await page.goto('./help')
+
+  const honest = page.getByRole('group').filter({ hasText: /qué está roto|what is broken/i })
+  await expect(honest).toBeVisible()
+
+  // Collapsed until asked for: ten open answers would be a wall of text.
+  const answer = honest.getByText(/nadie puede saberlo|no model can make honestly/i)
+  await expect(answer).toBeHidden()
+  await honest.locator('summary').click()
+  await expect(answer).toBeVisible()
+
+  // And the refusal that matters for safety is present, not buried.
+  await expect(page.getByText(/técnico certificado|certified technician/i)).toBeAttached()
+})

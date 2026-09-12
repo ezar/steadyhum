@@ -5,6 +5,7 @@ import { AddAppliance } from './screens/AddAppliance.tsx'
 import { ApplianceDetail } from './screens/ApplianceDetail.tsx'
 import { Check } from './screens/Check.tsx'
 import { Enroll } from './screens/Enroll.tsx'
+import { Help } from './screens/Help.tsx'
 import { Home } from './screens/Home.tsx'
 import { NotFound } from './screens/NotFound.tsx'
 import { Privacy } from './screens/Privacy.tsx'
@@ -30,6 +31,7 @@ export function App(): ReactNode {
         <Route path="/appliances/:applianceId/learn" element={<Enroll />} />
         <Route path="/appliances/:applianceId/check" element={<Check />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/help" element={<Help />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
