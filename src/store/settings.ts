@@ -13,10 +13,17 @@ export interface SettingsState {
   readonly keepClips: boolean
   /** Days before window-level rows are pruned. */
   readonly retentionDays: number
+  /**
+   * Whether the first-run introduction has been seen.
+   *
+   * Persisted, so it is shown once per device rather than once per session.
+   */
+  readonly onboarded: boolean
   setLocale: (locale: Locale) => void
   setDeeperAnalysis: (enabled: boolean) => void
   setKeepClips: (enabled: boolean) => void
   setRetentionDays: (days: number) => void
+  setOnboarded: (onboarded: boolean) => void
 }
 
 function initialLocale(): Locale {
@@ -32,6 +39,7 @@ export const useSettings = create<SettingsState>()(
       deeperAnalysis: false,
       keepClips: false,
       retentionDays: WINDOW_RETENTION_DAYS,
+      onboarded: false,
       setLocale: (locale) => {
         set({ locale })
       },
@@ -44,6 +52,9 @@ export const useSettings = create<SettingsState>()(
       setRetentionDays: (retentionDays) => {
         set({ retentionDays })
       },
+      setOnboarded: (onboarded) => {
+        set({ onboarded })
+      },
     }),
     {
       name: 'steadyhum.settings',
@@ -52,6 +63,7 @@ export const useSettings = create<SettingsState>()(
         deeperAnalysis: state.deeperAnalysis,
         keepClips: state.keepClips,
         retentionDays: state.retentionDays,
+        onboarded: state.onboarded,
       }),
     },
   ),

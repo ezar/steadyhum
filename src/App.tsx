@@ -9,6 +9,7 @@ import { Home } from './screens/Home.tsx'
 import { NotFound } from './screens/NotFound.tsx'
 import { Privacy } from './screens/Privacy.tsx'
 import { Settings } from './screens/Settings.tsx'
+import { Welcome } from './screens/Welcome.tsx'
 
 export function App(): ReactNode {
   return (
@@ -23,6 +24,7 @@ export function App(): ReactNode {
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/welcome" element={<Welcome />} />
         <Route path="/appliances/new" element={<AddAppliance />} />
         <Route path="/appliances/:applianceId" element={<ApplianceDetail />} />
         <Route path="/appliances/:applianceId/learn" element={<Enroll />} />

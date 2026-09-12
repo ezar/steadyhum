@@ -67,7 +67,10 @@ public/models/
 ```
 
 Only `manifest.json` is committed; the ~36 MB of binaries are not. They are
-cached by the service worker on first use rather than precached on install.
+cached by the service worker on first use rather than precached on install, and
+a given browser fetches about 23 MB of that — measured — because only one of the
+two WASM variants applies to it. The fetch happens when the engine starts, which
+is when a screen that records mounts, not when the user presses record.
 
 ## Two things that will bite
 
