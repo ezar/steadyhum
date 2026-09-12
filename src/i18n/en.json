@@ -22,7 +22,8 @@
     "settings": "Settings",
     "privacy": "Privacy",
     "about": "About",
-    "help": "Help"
+    "help": "Help",
+    "watch": "Watch"
   },
   "status": {
     "learning": "Learning",
@@ -64,7 +65,8 @@
     "addAppliance": "Add appliance",
     "listenNow": "Listen now",
     "lastCheck": "Last check: {when}",
-    "learnFirst": "Learn its normal"
+    "learnFirst": "Learn its normal",
+    "watchNow": "Watch"
   },
   "addAppliance": {
     "title": "Add appliance",
@@ -309,5 +311,30 @@
     "cardDisclaimer": "SteadyHum compares how this machine sounds now with how it sounded when it was working well. It tells you something changed, not what is broken: it is not a diagnosis. Gas appliances must be checked by a certified technician.",
     "cardMadeWith": "Made with SteadyHum · audio never leaves the phone",
     "cardNoDifferences": "No notable differences from its normal."
+  },
+  "watch": {
+    "title": "Watch",
+    "intro": "Listens continuously and tells you if the sound drifts away from its normal. Leave the phone where you always do, plugged in.",
+    "start": "Start watching",
+    "stop": "Stop",
+    "listening": "Watching",
+    "elapsed": "Running for {time}",
+    "needsProfile": "First teach SteadyHum how it sounds when it is working well.",
+    "timelineLabel": "Timeline of the watch session",
+    "screenAwake": "I will keep the screen on.",
+    "screenMaySleep": "This browser will not let me keep the screen on. If it sleeps, watching may stop.",
+    "drift": "The sound has been creeping up for a while. Not a spike: a drift.",
+    "segments": "Episodes",
+    "noSegments": "Nothing to report so far.",
+    "segment": "{start} to {end} · {status}",
+    "segmentDrift": "{start} to {end} · drift",
+    "summaryTitle": "Watch summary",
+    "summaryDuration": "Duration: {time}",
+    "summaryNone": "I heard nothing outside its normal.",
+    "summaryCount": "{count} episodes outside its normal.",
+    "summaryCount_one": "1 episode outside its normal.",
+    "again": "Watch again",
+    "honest": "An episode means it sounded different, not that something is broken.",
+    "failed": "I could not start watching. Check the microphone permission and try again."
   }
 }

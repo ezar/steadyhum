@@ -145,6 +145,32 @@ export interface Clip {
   readonly createdAt: string
 }
 
+/**
+ * A stretch of a watch session that sounded unlike the machine's normal.
+ *
+ * Contiguous windows whose smoothed status rises above normal collapse into
+ * one of these, so an hour of watching is read as a handful of episodes rather
+ * than seven thousand scores. Kept after the window rows are pruned: the
+ * episode is the thing worth remembering.
+ */
+export interface WatchSegment {
+  readonly id: string
+  readonly sessionId: string
+  readonly applianceId: string
+  /** Seconds from the start of the session. */
+  readonly startSeconds: number
+  readonly endSeconds: number
+  /** Highest smoothed score reached, in [0, 1]. */
+  readonly peakScore: number
+  /** Worst status the segment reached. */
+  readonly status: Status
+  /** The learned state it most resembled while it lasted. */
+  readonly dominantStateId: string
+  /** True when the segment was opened by slow drift rather than a spike. */
+  readonly fromDrift: boolean
+  readonly createdAt: string
+}
+
 /** Lets the user undo a verdict that moved their thresholds (section 6.7). */
 export interface CalibrationEntry {
   readonly id: string

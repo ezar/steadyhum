@@ -9,6 +9,7 @@ import type {
   StoredCheck,
   StoredProfile,
   StoredWindow,
+  WatchSegment,
 } from './schema.ts'
 
 /**
@@ -23,6 +24,7 @@ export class SteadyHumDatabase extends Dexie {
   declare checks: EntityTable<StoredCheck, 'id'>
   declare clips: EntityTable<Clip, 'id'>
   declare calibrationLog: EntityTable<CalibrationEntry, 'id'>
+  declare watchSegments: EntityTable<WatchSegment, 'id'>
 
   constructor(name = 'steadyhum') {
     super(name)
@@ -34,6 +36,14 @@ export class SteadyHumDatabase extends Dexie {
       checks: 'id, applianceId, sessionId, createdAt, [applianceId+createdAt]',
       clips: 'id, sessionId, createdAt',
       calibrationLog: 'id, applianceId, checkId, createdAt',
+    })
+    /*
+     * Watch mode's segment log. Purely additive — Dexie creates the store and
+     * leaves every existing table alone, so no upgrade function is needed and
+     * nobody's profiles are touched.
+     */
+    this.version(2).stores({
+      watchSegments: 'id, sessionId, applianceId, [applianceId+createdAt], createdAt',
     })
   }
 }
