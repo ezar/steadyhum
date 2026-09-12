@@ -9,8 +9,8 @@ import type { WatchSegment } from '@/db/schema.ts'
 import { newId, nowIso } from '@/lib/id.ts'
 import { createSegmentTracker } from '@/lib/watchSegments.ts'
 import type { OpenSegment, SegmentTracker } from '@/lib/watchSegments.ts'
-import { appendPoint } from '@/lib/watchTimeline.ts'
-import type { TimelinePoint } from '@/lib/watchTimeline.ts'
+import { createTimeline } from '@/lib/watchTimeline.ts'
+import type { Timeline, TimelinePoint } from '@/lib/watchTimeline.ts'
 import { listen } from './engine.ts'
 import type { Listening } from './engine.ts'
 
@@ -62,6 +62,9 @@ interface SessionRecord {
   total: number
   clean: number
   discarded: number
+  /** A write is in flight; a second caller must not start another. */
+  saving: boolean
+  /** The write landed. Only then is it safe to stop trying. */
   saved: boolean
 }
 
@@ -89,6 +92,7 @@ export function useWatch(applianceId: string): Watcher {
   const tracker = useRef<SegmentTracker | null>(null)
   const record = useRef<SessionRecord | null>(null)
   const wakeLock = useRef<WakeLockSentinel | null>(null)
+  const timeline = useRef<Timeline | null>(null)
   /**
    * Bumped by every start and every stop.
    *
@@ -101,10 +105,7 @@ export function useWatch(applianceId: string): Watcher {
 
   const persist = useCallback(async (): Promise<void> => {
     const current = record.current
-    if (current === null || current.saved) return
-    // Guard against a second call: stopping and then unmounting would
-    // otherwise insert the same session twice and reject on the primary key.
-    current.saved = true
+    if (current === null || current.saving || current.saved) return
     /*
      * A session that heard nothing is not a session.
      *
@@ -112,7 +113,15 @@ export function useWatch(applianceId: string): Watcher {
      * here, and a row of zeroes in the history says something happened when
      * nothing did.
      */
-    if (current.total === 0) return
+    if (current.total === 0) {
+      current.saved = true
+      return
+    }
+    // `saving` stops the second caller — stopping and then unmounting — from
+    // inserting the same session twice. `saved` is only set once the write has
+    // actually landed, so a failed transaction can still be retried on unmount
+    // rather than silently losing the session.
+    current.saving = true
 
     const rows: WatchSegment[] = current.segments.map((segment) => ({
       id: newId(),
@@ -143,6 +152,8 @@ export function useWatch(applianceId: string): Watcher {
       })
       if (rows.length > 0) await db.watchSegments.bulkAdd(rows)
     })
+    current.saved = true
+    current.saving = false
   }, [applianceId])
 
   const releaseWakeLock = useCallback(() => {
@@ -213,7 +224,7 @@ export function useWatch(applianceId: string): Watcher {
   }, [persist, releaseWakeLock])
 
   const start = useCallback(() => {
-    if (session.current !== null || record.current?.saved === false) return
+    if (session.current !== null) return
     const mine = (token.current += 1)
 
     setState({ ...IDLE, watching: true })
@@ -224,6 +235,7 @@ export function useWatch(applianceId: string): Watcher {
       total: 0,
       clean: 0,
       discarded: 0,
+      saving: false,
       saved: false,
     }
 
@@ -234,6 +246,7 @@ export function useWatch(applianceId: string): Watcher {
 
       scorer.current = createStreamScorer(stored.profile)
       tracker.current = createSegmentTracker()
+      timeline.current = createTimeline()
       await acquireWakeLock()
       if (token.current !== mine) {
         releaseWakeLock()
@@ -244,8 +257,9 @@ export function useWatch(applianceId: string): Watcher {
         (result) => {
           const engine = scorer.current
           const segmenter = tracker.current
+          const strip = timeline.current
           const current = record.current
-          if (engine === null || segmenter === null || current === null) return
+          if (engine === null || segmenter === null || strip === null || current === null) return
 
           current.total += 1
           if (result.guard.accepted) current.clean += 1
@@ -272,6 +286,11 @@ export function useWatch(applianceId: string): Watcher {
           })
           if (closed !== null) current.segments.push(closed)
           const segments = [...current.segments]
+          const points = strip.push({
+            seconds: result.window.t,
+            smoothed: update.smoothed,
+            status: update.status,
+          })
 
           setState((previous) => ({
             ...previous,
@@ -280,11 +299,7 @@ export function useWatch(applianceId: string): Watcher {
             status: update.status,
             drifting: update.drift.drifting,
             levelDbfs: result.window.rmsDbfs,
-            timeline: appendPoint(previous.timeline, {
-              seconds: result.window.t,
-              smoothed: update.smoothed,
-              status: update.status,
-            }),
+            timeline: points,
             segments,
           }))
         },
@@ -301,6 +316,15 @@ export function useWatch(applianceId: string): Watcher {
       session.current = active
     })().catch((error: unknown) => {
       releaseWakeLock()
+      /*
+       * Clear the record. A start that never produced a window has nothing to
+       * save, and leaving it behind made the retry button a no-op: every click
+       * bounced off the "a session is already in progress" guard, so the only
+       * way to try again after denying the microphone was to leave the screen
+       * and come back.
+       */
+      record.current = null
+      timeline.current = null
       // The screen shows its own sentence; this is for whoever is debugging.
       console.error('watch session failed to start', error)
       setState({ ...IDLE, error: error instanceof Error ? error.message : String(error) })
