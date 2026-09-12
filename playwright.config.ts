@@ -1,10 +1,6 @@
 import { defineConfig, devices } from '@playwright/test'
 
-/**
- * Use an already-installed Chromium instead of Playwright's own download when
- * the environment provides one (CI images, sandboxes). Unset locally.
- */
-const executablePath = process.env['CHROMIUM_PATH']
+import { executablePath, FAKE_MIC_ARGS } from './e2e/fake-audio.ts'
 
 /**
  * Base path to exercise. The suite runs twice in CI: at the site root, and under
@@ -17,6 +13,8 @@ const baseURL = `http://localhost:${port}${basePath}`
 
 export default defineConfig({
   testDir: './e2e',
+  // Writes the silent-audio fixture that e2e/guards.spec.ts feeds Chromium.
+  globalSetup: './e2e/global-setup.ts',
   fullyParallel: true,
   forbidOnly: Boolean(process.env['CI']),
   retries: process.env['CI'] ? 2 : 0,
@@ -32,12 +30,7 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         launchOptions: {
           ...(executablePath === undefined ? {} : { executablePath }),
-          // The whole product is a microphone. Every e2e run needs a fake one.
-          args: [
-            '--use-fake-ui-for-media-stream',
-            '--use-fake-device-for-media-stream',
-            '--autoplay-policy=no-user-gesture-required',
-          ],
+          args: FAKE_MIC_ARGS,
         },
         permissions: ['microphone'],
       },

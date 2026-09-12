@@ -36,8 +36,11 @@ Everything else in the app touches earshot only through its types.
   the models in a Worker and emits one `WindowResult` per analysis window.
   `src/audio/engine.ts` joins them.
 - **Guards run inside the worker.** `createEngine({ ..., guards: {} })` judges
-  each window (`silence`, `too-loud`, `interference`, `clipping`) on earshot's
-  default thresholds and attaches the verdict as `WindowResult.guard`. The
+  each window on earshot's default thresholds and attaches the verdict as
+  `WindowResult.guard`. It emits three reasons — `silence`, `too-loud` and
+  `interference`. `clipping` is in earshot's type union but nothing currently
+  produces it, so `GuardHint`'s `enroll.clipping` string is unreachable today;
+  the mapping stays because the type allows it and a future version may. The
   empty object is not a placeholder: it is what turns the feature on with the
   same thresholds `createGuards()` resolves.
 

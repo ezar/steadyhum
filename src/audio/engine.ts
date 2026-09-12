@@ -84,6 +84,22 @@ export async function closeEngine(): Promise<void> {
  */
 export async function listen(onWindow: (result: GuardedWindow) => void): Promise<Listening> {
   const instance = await getEngine()
+
+  /*
+   * Start each recording from a clean framer.
+   *
+   * The engine is reused for the lifetime of the tab, and its window clock
+   * counts samples since it was created, not since this recording began. Left
+   * alone, the first window of a check that follows an enrolment session in
+   * the same tab arrives with `t` already past CHECK_SECONDS, and useRecorder
+   * — which reads `elapsedSeconds` straight off `window.t` — stops the check
+   * on its first window. Measured before this call existed: a second session
+   * in one page load started at t = 7.31 s rather than 0.
+   *
+   * It also drops the tail of the previous session still buffered in the
+   * framer, which would otherwise bleed into the first new window.
+   */
+  await instance.reset()
   /*
    * The engine attaches a verdict to every window, so this is only ever used
    * if one arrives without one. earshot types `guard` as optional because the
