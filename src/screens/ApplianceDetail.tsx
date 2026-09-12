@@ -1,9 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import type { ReactNode } from 'react'
 
 import { db } from '@/db/index.ts'
-import { deleteAppliance, getApplianceOverview, listChecks } from '@/db/repo.ts'
+import { deleteAppliance, getApplianceOverview, listChecks, renameAppliance } from '@/db/repo.ts'
 import { exportFileName, exportProfile } from '@/db/transfer.ts'
 import { useI18n } from '@/i18n/context.ts'
 import { formatDateTime } from '@/lib/format.ts'
@@ -17,6 +18,8 @@ export function ApplianceDetail(): ReactNode {
   const { t, locale } = useI18n()
   const navigate = useNavigate()
   const { applianceId = '' } = useParams()
+  // null while not renaming; the draft name while the field is open.
+  const [draftName, setDraftName] = useState<string | null>(null)
 
   const overview = useLiveQuery(() => getApplianceOverview(applianceId), [applianceId], undefined)
   const checks = useLiveQuery(() => listChecks(applianceId), [applianceId], undefined)
@@ -64,6 +67,56 @@ export function ApplianceDetail(): ReactNode {
             <p className="text-ink-soft">{t(`applianceType.${appliance.type}`)}</p>
             <StatusChip status={status} />
           </div>
+
+          {draftName === null ? (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setDraftName(appliance.name)
+              }}
+            >
+              {t('common.rename')}
+            </Button>
+          ) : (
+            <form
+              className="flex flex-col gap-2"
+              onSubmit={(event) => {
+                event.preventDefault()
+                // An empty name would leave a card with no label on Home, so
+                // saving is simply unavailable until there is something to save.
+                if (draftName.trim() === '') return
+                void renameAppliance(appliance.id, draftName).then(() => {
+                  setDraftName(null)
+                })
+              }}
+            >
+              <label className="flex flex-col gap-1">
+                <span className="text-sm font-medium">{t('addAppliance.nameLabel')}</span>
+                <input
+                  autoFocus
+                  value={draftName}
+                  onChange={(event) => {
+                    setDraftName(event.target.value)
+                  }}
+                  className="min-h-12 rounded-[var(--radius-card)] border border-hairline bg-paper px-3"
+                />
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <Button type="submit" disabled={draftName.trim() === ''}>
+                  {t('common.save')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setDraftName(null)
+                  }}
+                >
+                  {t('common.cancel')}
+                </Button>
+              </div>
+            </form>
+          )}
           {appliance.placementNote !== '' && (
             <p className="text-sm text-ink-faint">
               <span className="font-medium">{t('appliance.placement')}: </span>

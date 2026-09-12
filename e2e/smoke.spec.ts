@@ -181,3 +181,36 @@ test('help answers the questions the app provokes', async ({ page }) => {
   // And the refusal that matters for safety is present, not buried.
   await expect(page.getByText(/técnico certificado|certified technician/i)).toBeAttached()
 })
+
+/**
+ * Renaming was reachable from the data layer and from nowhere else — P0 asks
+ * for it, and `renameAppliance` sat unused. The test that matters is that the
+ * new name survives to Home, not merely that the field accepts typing.
+ */
+test('renames an appliance, and the new name reaches Home', async ({ page }) => {
+  await skipIntroduction(page)
+
+  await page.goto('./appliances/new')
+  await page.getByRole('textbox').first().fill('Nevera vieja')
+  await page.getByRole('button', { name: /guardar electrodoméstico|save appliance/i }).click()
+  await page.waitForURL(/\/learn$/)
+
+  await page.goto('./')
+  await page.getByText('Nevera vieja').click()
+
+  await page.getByRole('button', { name: /cambiar nombre|rename/i }).click()
+  const field = page.getByRole('textbox').first()
+  await expect(field).toHaveValue('Nevera vieja')
+
+  // An empty name would leave an unlabelled card on Home, so it cannot be saved.
+  await field.fill('')
+  await expect(page.getByRole('button', { name: /^(guardar|save)$/i })).toBeDisabled()
+
+  await field.fill('Nevera de la cocina')
+  await page.getByRole('button', { name: /^(guardar|save)$/i }).click()
+
+  await expect(page.getByRole('heading', { name: 'Nevera de la cocina' })).toBeVisible()
+  await page.goto('./')
+  await expect(page.getByText('Nevera de la cocina')).toBeVisible()
+  await expect(page.getByText('Nevera vieja')).toHaveCount(0)
+})

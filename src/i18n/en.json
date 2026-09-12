@@ -35,7 +35,13 @@
   "confidence": {
     "low": "low",
     "medium": "medium",
-    "high": "high"
+    "high": "high",
+    "label": "{level} confidence",
+    "reason": {
+      "discarded": "Part of the recording was noisy and was discarded, so I judged this on less sound than I would like.",
+      "level": "The phone did not sound the same distance away as when I learned, and that alone can change the result.",
+      "enrollment": "I have only just heard enough of this machine. More learning sessions make the warning sharper."
+    }
   },
   "applianceType": {
     "washing-machine": "Washing machine",
@@ -249,6 +255,11 @@
         "q": "What does each result mean?",
         "a": "\"Normal\": within what it learned. \"Slightly different\": a little outside its normal, possibly a phase you never recorded. \"Different\": clearly outside. \"Unusable\": too much noise to say anything at all.",
         "b": "Neither \"slightly different\" nor \"different\" means broken. They mean changed from what you taught it."
+      },
+      "confidence": {
+        "q": "What is the confidence on a result?",
+        "a": "How much I trust that particular verdict — not the probability that something is broken. It drops when part of the recording was noisy, when the phone was not its usual distance away, or when I have not heard much of that machine yet.",
+        "b": "It always takes the worst of those three, never their average: good learning does not make up for a half-discarded recording."
       },
       "recording": {
         "q": "How do I record well?",

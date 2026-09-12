@@ -6,6 +6,8 @@ import { applyUserVerdict } from '@/db/record.ts'
 import { LEVEL_GUARD_DB } from '@/db/schema.ts'
 import type { StoredCheck, UserVerdict } from '@/db/schema.ts'
 import { useI18n } from '@/i18n/context.ts'
+import { confidenceOf } from '@/lib/confidence.ts'
+import type { EnrollmentProgress } from '@/db/repo.ts'
 import { Button } from './Button.tsx'
 import { Card } from './Card.tsx'
 import { DescriptorList } from './DescriptorList.tsx'
@@ -18,14 +20,17 @@ import { StatusChip } from './StatusChip.tsx'
 export function Verdict({
   applianceId,
   check,
+  enrollment,
   onRetry,
 }: {
   readonly applianceId: string
   readonly check: StoredCheck
+  readonly enrollment: EnrollmentProgress
   readonly onRetry: () => void
 }): ReactNode {
   const { t } = useI18n()
   const [answered, setAnswered] = useState<UserVerdict | null>(check.verdict)
+  const confidence = confidenceOf(check, enrollment)
 
   if (check.unusable) {
     return (
@@ -51,6 +56,18 @@ export function Verdict({
           <h2 className="text-xl font-semibold">{t(`verdict.${check.status}`)}</h2>
           <StatusChip status={check.status} />
         </div>
+        <p className="text-sm text-ink-soft">
+          {t('confidence.label', { level: t(`confidence.${confidence.level}`) })}
+        </p>
+        {/*
+         * Say why, whenever it is not high. A bare "confianza media" invites
+         * the reader to invent a reason, and the reason is always something
+         * they can act on: record again in the quiet, put the phone back where
+         * it was, add a learning session.
+         */}
+        {confidence.reason !== null && (
+          <p className="text-sm text-ink-faint">{t(`confidence.reason.${confidence.reason}`)}</p>
+        )}
         <p className="tabular text-sm text-ink-faint">
           {t('verdict.matchedState', { state: check.dominantStateId })}
         </p>
