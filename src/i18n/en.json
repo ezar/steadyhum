@@ -225,7 +225,7 @@
       "title": "It asks for a few minutes up front.",
       "body": "Learning a machine’s normal takes 3 recordings while it is running, about 3 minutes in total. Without that there is nothing to compare against.",
       "detail": "After that, each check is 30 seconds.",
-      "wifi": "The first recording downloads about 25 MB of models. Better on wifi; after that it works offline.",
+      "wifi": "Opening the learning screen downloads about 23 MB of models, before you record anything. Better on wifi; after that it works offline.",
       "tip": "To start, a fridge or a boiler works better than a washing machine: they sound steady. A washing machine has very different phases and they all need recording."
     }
   }

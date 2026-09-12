@@ -225,7 +225,7 @@
       "title": "Te va a pedir unos minutos por adelantado.",
       "body": "Para aprender el normal de una máquina hacen falta 3 grabaciones con ella funcionando, unos 3 minutos en total. Sin eso no hay nada con lo que comparar.",
       "detail": "Después, cada comprobación son 30 segundos.",
-      "wifi": "La primera grabación descarga unos 25 MB de modelos. Mejor con wifi; luego funciona sin conexión.",
+      "wifi": "Al abrir la pantalla de aprendizaje se descargan unos 23 MB de modelos, antes de grabar nada. Mejor con wifi; luego funciona sin conexión.",
       "tip": "Para empezar, una nevera o una caldera va mejor que una lavadora: suenan estables. Una lavadora tiene fases muy distintas y conviene grabarlas todas."
     }
   }
