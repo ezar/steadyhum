@@ -11,6 +11,7 @@ import type { EnrollmentProgress } from '@/db/repo.ts'
 import { Button } from './Button.tsx'
 import { Card } from './Card.tsx'
 import { DescriptorList } from './DescriptorList.tsx'
+import { ShareVerdict } from './ShareVerdict.tsx'
 import { StatusChip } from './StatusChip.tsx'
 
 /**
@@ -19,11 +20,15 @@ import { StatusChip } from './StatusChip.tsx'
  */
 export function Verdict({
   applianceId,
+  applianceName,
+  applianceType,
   check,
   enrollment,
   onRetry,
 }: {
   readonly applianceId: string
+  readonly applianceName: string
+  readonly applianceType: string
   readonly check: StoredCheck
   readonly enrollment: EnrollmentProgress
   readonly onRetry: () => void
@@ -119,6 +124,13 @@ export function Verdict({
           </p>
         )}
       </Card>
+
+      <ShareVerdict
+        applianceName={applianceName}
+        applianceType={applianceType}
+        check={check}
+        enrollment={enrollment}
+      />
 
       <div className="flex flex-wrap gap-2">
         <Button variant="secondary" onClick={onRetry}>

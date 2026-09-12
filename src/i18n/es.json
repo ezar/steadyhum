@@ -298,5 +298,16 @@
         "a": "No. SteadyHum es una pista, no un diagnóstico, y no es un dispositivo de seguridad. Cualquier aparato de gas lo tiene que revisar un técnico certificado, huela raro o no, diga esta app lo que diga."
       }
     }
+  },
+  "share": {
+    "action": "Compartir el resultado",
+    "preparing": "Preparando la imagen…",
+    "failed": "No he podido crear la imagen.",
+    "downloaded": "Imagen guardada en tus descargas.",
+    "shareTitle": "{name} · SteadyHum",
+    "fileName": "steadyhum-{name}.png",
+    "cardDisclaimer": "SteadyHum compara el sonido actual con el que aprendió de esta máquina cuando funcionaba bien. Indica que algo ha cambiado, no qué está averiado: no es un diagnóstico. Los aparatos de gas los debe revisar un técnico certificado.",
+    "cardMadeWith": "Hecho con SteadyHum · el audio no sale del móvil",
+    "cardNoDifferences": "Sin diferencias reseñables frente a su normal."
   }
 }

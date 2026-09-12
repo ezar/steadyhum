@@ -298,5 +298,16 @@
         "a": "No. SteadyHum is a hint, not a diagnosis, and it is not a safety device. Any gas appliance must be checked by a certified technician, smell or no smell, whatever this app says."
       }
     }
+  },
+  "share": {
+    "action": "Share this result",
+    "preparing": "Preparing the image…",
+    "failed": "I could not create the image.",
+    "downloaded": "Image saved to your downloads.",
+    "shareTitle": "{name} · SteadyHum",
+    "fileName": "steadyhum-{name}.png",
+    "cardDisclaimer": "SteadyHum compares how this machine sounds now with how it sounded when it was working well. It tells you something changed, not what is broken: it is not a diagnosis. Gas appliances must be checked by a certified technician.",
+    "cardMadeWith": "Made with SteadyHum · audio never leaves the phone",
+    "cardNoDifferences": "No notable differences from its normal."
   }
 }
