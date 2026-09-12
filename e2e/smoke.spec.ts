@@ -21,6 +21,64 @@ async function skipIntroduction(page: Page): Promise<void> {
 }
 
 /**
+ * Read what the app persisted for each analysis window.
+ *
+ * Two properties this suite must hold leave no trace on screen — that the
+ * guards ran in the worker, and that each recording's clock starts at zero —
+ * so they are checked where they are observable.
+ *
+ * These e2e files typecheck under the Node config, which has no DOM lib on
+ * purpose: vite.config.ts and scripts/ must not see browser globals. The
+ * callback below runs in the page, so it describes the slice of IndexedDB it
+ * touches rather than widening the config for every Node file.
+ */
+async function readStoredWindows(
+  page: Page,
+): Promise<{ sessionId: string; t: number; fromWorker: boolean; dimensions: number }[]> {
+  return page.evaluate(async () => {
+    interface Request<T> {
+      result: T
+      error: unknown
+      onsuccess: (() => void) | null
+      onerror: (() => void) | null
+    }
+    interface Row {
+      sessionId: string
+      window: { t: number; guard?: unknown }
+      embedding: { dimensions: number }
+      rejectedFor: string[]
+    }
+    interface Database {
+      transaction: (
+        store: string,
+        mode: string,
+      ) => { objectStore: (store: string) => { getAll: () => Request<Row[]> } }
+    }
+    const open = <T>(request: Request<T>): Promise<T> =>
+      new Promise<T>((resolve, reject) => {
+        request.onsuccess = () => {
+          resolve(request.result)
+        }
+        request.onerror = () => {
+          reject(request.error instanceof Error ? request.error : new Error('IndexedDB failed'))
+        }
+      })
+
+    const factory = (
+      globalThis as unknown as { indexedDB: { open: (name: string) => Request<Database> } }
+    ).indexedDB
+    const db = await open(factory.open('steadyhum'))
+    const rows = await open(db.transaction('windows', 'readonly').objectStore('windows').getAll())
+    return rows.map((row) => ({
+      sessionId: row.sessionId,
+      t: row.window.t,
+      fromWorker: row.window.guard !== undefined,
+      dimensions: row.embedding.dimensions,
+    }))
+  })
+}
+
+/**
  * The main flow that must survive every change: add an appliance, land on
  * enrollment, come back and find it on Home. Audio is not exercised here —
  * see docs/earshot-integration.md.
@@ -80,6 +138,17 @@ test('the audio engine starts and produces analysis windows', async ({ page }) =
 
   await page.getByRole('button', { name: /terminar sesión|end session/i }).click()
   await expect(page.getByText(/1 (de|of) 3/)).toBeVisible({ timeout: 30_000 })
+
+  // The guards run inside the worker, which is what lets it skip the embedder
+  // for windows it rejects — over half the per-window cost, spent on
+  // embeddings the app throws away. Nothing on screen shows that, and dropping
+  // `guards` from createEngine would keep every test above green while
+  // silently costing that back, so assert it where it is observable: a window
+  // scored by the worker carries the worker's own verdict.
+  const verdicts = await readStoredWindows(page)
+
+  expect(verdicts.length).toBeGreaterThan(0)
+  expect(verdicts.filter((row) => row.fromWorker)).toHaveLength(verdicts.length)
 })
 
 /**
@@ -213,4 +282,49 @@ test('renames an appliance, and the new name reaches Home', async ({ page }) => 
   await page.goto('./')
   await expect(page.getByText('Nevera de la cocina')).toBeVisible()
   await expect(page.getByText('Nevera vieja')).toHaveCount(0)
+})
+
+/**
+ * Each recording must start its clock at zero.
+ *
+ * The engine lives for the lifetime of the tab and counts samples since it was
+ * created. The check screen derives `elapsedSeconds` straight from `window.t`
+ * and stops at CHECK_SECONDS, so a clock carried over from enrolment ends the
+ * check on its first window — and enrolment alone is at least 60 s, so the
+ * real path (learn, then tap "listen now" without reloading) hit it every
+ * time. It only hid because every test here reloaded between recordings.
+ */
+test('starts every recording from zero, not from where the last one ended', async ({ page }) => {
+  test.slow()
+
+  await skipIntroduction(page)
+  await page.goto('./appliances/new')
+  await page.getByRole('textbox').first().fill('Reloj')
+  await page.getByRole('button', { name: /guardar electrodoméstico|save appliance/i }).click()
+  await page.waitForURL(/\/learn$/)
+
+  const start = page.getByRole('button', { name: /empezar sesión|start session/i })
+  await expect(start).toBeEnabled({ timeout: 60_000 })
+
+  // Two sessions in one page load: no reload may happen between them, because
+  // a reload is exactly what used to paper this over.
+  for (const completed of [1, 2]) {
+    await page.getByRole('button', { name: /empezar sesión|start session/i }).click()
+    await expect(page.getByText(/[1-9]\d* \/ 120/)).toBeVisible({ timeout: 60_000 })
+    await page.getByRole('button', { name: /terminar sesión|end session/i }).click()
+    await expect(page.getByText(new RegExp(`${completed} (de|of) 3`))).toBeVisible({
+      timeout: 30_000,
+    })
+  }
+
+  const rows = await readStoredWindows(page)
+  const firstClockPerSession = [...new Set(rows.map((row) => row.sessionId))].map((id) =>
+    Math.min(...rows.filter((row) => row.sessionId === id).map((row) => row.t)),
+  )
+
+  expect(firstClockPerSession).toHaveLength(2)
+  for (const clock of firstClockPerSession) {
+    // The first window of a session sits within one hop of zero.
+    expect(clock).toBeLessThan(1)
+  }
 })

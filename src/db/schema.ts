@@ -73,17 +73,26 @@ export interface Session {
 /**
  * One analysis window, with its embedding quantized for storage.
  *
- * earshot hands back a 1024-float embedding per window; int8 quantization takes
- * it from 4 KB to about 1 KB, which is what keeps a two hour watch session
- * (roughly 15k windows) inside the storage budget of section 7. Window-level
- * rows are pruned after {@link WINDOW_RETENTION_DAYS}; the aggregates in
- * `checks` are kept forever.
+ * earshot hands back a 1024-float embedding for an accepted window; int8
+ * quantization takes it from 4 KB to about 1 KB, which is what keeps a two
+ * hour watch session (roughly 15k windows) inside the storage budget of
+ * section 7. Window-level rows are pruned after
+ * {@link WINDOW_RETENTION_DAYS}; the aggregates in `checks` are kept forever.
+ *
+ * A **rejected** window stores no embedding at all — `dimensions` is 0 — since
+ * the engine's guards run in the worker and it skips the embedder for windows
+ * it rejects. Nothing is lost: a rejected window never reaches a profile or a
+ * score. But that makes an invariant load-bearing rather than merely tidy:
+ * **read an embedding back only from rows whose `rejectedFor` is empty.**
+ * `cleanWindows` in `record.ts` is the one place that does, and the one place
+ * that should.
  */
 export interface StoredWindow {
   readonly id?: number
   readonly sessionId: string
   /** The window minus its embedding, which is stored quantized alongside. */
   readonly window: Omit<WindowResult, 'embedding'>
+  /** Empty (`dimensions: 0`) when {@link rejectedFor} is not empty. */
   readonly embedding: QuantizedEmbedding
   /** Guard rejection reasons; empty when the window was accepted. */
   readonly rejectedFor: readonly GuardReason[]

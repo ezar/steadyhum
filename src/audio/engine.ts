@@ -1,11 +1,11 @@
 /**
  * SteadyHum's single point of contact with the earshot audio engine.
  *
- * earshot splits the job in three: a {@link Capture} owns the microphone and
- * emits PCM chunks, an {@link Engine} runs the models in a worker and emits one
- * {@link WindowResult} per analysis window, and {@link createGuards} decides
- * which of those windows are usable. This module wires the three together and
- * hands the app a single subscribe-and-stop object.
+ * earshot splits the job in two here: a {@link Capture} owns the microphone and
+ * emits PCM chunks, and an {@link Engine} runs the models in a worker, emitting
+ * one {@link WindowResult} per analysis window with the guards' verdict already
+ * attached. This module wires the two together and hands the app a single
+ * subscribe-and-stop object.
  */
 import { createCapture, createEngine, createGuards } from 'earshot'
 import type { AppliedConstraints, GuardVerdict, WindowResult } from 'earshot'
@@ -50,9 +50,18 @@ type EngineHandle = Awaited<ReturnType<typeof createEngine>>
 
 let engine: Promise<EngineHandle> | null = null
 
-/** Creates the engine once and reuses it for the lifetime of the tab. */
+/**
+ * Creates the engine once and reuses it for the lifetime of the tab.
+ *
+ * `guards: {}` runs the guards inside the worker on earshot's own defaults —
+ * the same thresholds `createGuards()` resolves on the main thread, so the
+ * verdicts are unchanged. What changes is the cost: the engine skips the
+ * embedder for windows the guards reject, and the embedder is over half the
+ * per-window work. Those embeddings were being computed and then thrown away,
+ * since a rejected window never reaches a profile or a score.
+ */
 function getEngine(): Promise<EngineHandle> {
-  engine ??= createEngine({ workerUrl, models: MODEL_URLS })
+  engine ??= createEngine({ workerUrl, models: MODEL_URLS, guards: {} })
   return engine
 }
 
@@ -75,11 +84,37 @@ export async function closeEngine(): Promise<void> {
  */
 export async function listen(onWindow: (result: GuardedWindow) => void): Promise<Listening> {
   const instance = await getEngine()
-  const guards = createGuards()
+
+  /*
+   * Start each recording from a clean framer.
+   *
+   * The engine is reused for the lifetime of the tab, and its window clock
+   * counts samples since it was created, not since this recording began. Left
+   * alone, the first window of a check that follows an enrolment session in
+   * the same tab arrives with `t` already past CHECK_SECONDS, and useRecorder
+   * — which reads `elapsedSeconds` straight off `window.t` — stops the check
+   * on its first window. Measured before this call existed: a second session
+   * in one page load started at t = 7.31 s rather than 0.
+   *
+   * It also drops the tail of the previous session still buffered in the
+   * framer, which would otherwise bleed into the first new window.
+   */
+  await instance.reset()
+  /*
+   * The engine attaches a verdict to every window, so this is only ever used
+   * if one arrives without one. earshot types `guard` as optional because the
+   * engine omits it when no guards are configured, and documents this exact
+   * fallback for that case.
+   *
+   * It must not be replaced by assuming acceptance: a window nobody vetted,
+   * treated as clean, is a conversation or a television learned as the
+   * machine's normal sound.
+   */
+  const fallback = createGuards()
   const collected: GuardedWindow[] = []
 
   const offWindow = instance.onWindow((window) => {
-    const result: GuardedWindow = { window, guard: guards.check(window) }
+    const result: GuardedWindow = { window, guard: window.guard ?? fallback.check(window) }
     collected.push(result)
     onWindow(result)
   })

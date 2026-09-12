@@ -20,12 +20,12 @@ compile clean.
 
 ## Where the two projects meet
 
-| SteadyHum                  | What it does                                                                                                               |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `src/audio/entrypoints.ts` | The `?worker&url` and `?url` imports of earshot's worker and capture worklet                                               |
-| `src/audio/engine.ts`      | The only module that imports `earshot` for the engine; wires capture, engine and guards into one subscribe-and-stop object |
-| `src/audio/useRecorder.ts` | Drives one recording session and exposes the live meters                                                                   |
-| `src/db/record.ts`         | Turns finished recordings into stored rows, and calls `learnProfile`, `scoreCheck`, `describeDifference` and `calibrate`   |
+| SteadyHum                  | What it does                                                                                                                            |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/audio/entrypoints.ts` | The `?worker&url` and `?url` imports of earshot's worker and capture worklet                                                            |
+| `src/audio/engine.ts`      | The only module that imports `earshot` for the engine; wires capture and the guard-configured engine into one subscribe-and-stop object |
+| `src/audio/useRecorder.ts` | Drives one recording session and exposes the live meters                                                                                |
+| `src/db/record.ts`         | Turns finished recordings into stored rows, and calls `learnProfile`, `scoreCheck`, `describeDifference` and `calibrate`                |
 
 Everything else in the app touches earshot only through its types.
 
@@ -35,10 +35,31 @@ Everything else in the app touches earshot only through its types.
   microphone and emits PCM chunks; `createEngine({ workerUrl, models })` runs
   the models in a Worker and emits one `WindowResult` per analysis window.
   `src/audio/engine.ts` joins them.
-- **Guards are a third thing.** `createGuards()` judges each window
-  (`silence`, `too-loud`, `interference`, `clipping`). earshot scores whatever it
-  is given; deciding a recording was too spoiled to show a verdict is
-  SteadyHum's call, and lives in `StoredCheck.unusable`.
+- **Guards run inside the worker.** `createEngine({ ..., guards: {} })` judges
+  each window on earshot's default thresholds and attaches the verdict as
+  `WindowResult.guard`. It emits three reasons — `silence`, `too-loud` and
+  `interference`. `clipping` is in earshot's type union but nothing currently
+  produces it, so `GuardHint`'s `enroll.clipping` string is unreachable today;
+  the mapping stays because the type allows it and a future version may. The
+  empty object is not a placeholder: it is what turns the feature on with the
+  same thresholds `createGuards()` resolves.
+
+  It is worth doing there rather than here because the engine then **skips the
+  embedder for rejected windows**, and the embedder is over half the per-window
+  cost. Those embeddings were computed and discarded, since a rejected window
+  never reaches a profile or a score. Measured through the app's own storage:
+  feeding silence, rejected windows store 0-dimension embeddings where they
+  previously stored 1024.
+
+  `guard` is typed optional because the engine omits it when no guards are
+  configured, so `src/audio/engine.ts` keeps a `createGuards()` fallback for a
+  window that arrives without one. Never assume acceptance instead: a window
+  nobody vetted, treated as clean, is a television learned as the machine's
+  normal sound.
+
+  earshot scores whatever it is given; deciding a recording was too spoiled to
+  show a verdict is SteadyHum's call, and lives in `StoredCheck.unusable`.
+
 - **Status has three values**: `normal`, `watch`, `anomalous`. The UI's
   "Unusable" is SteadyHum's own fourth state, not earshot's.
 - **Scores are in `[0, 1]`**, not z units. Everything the profile heard while
