@@ -117,10 +117,16 @@ export function useWatch(applianceId: string): Watcher {
       current.saved = true
       return
     }
-    // `saving` stops the second caller — stopping and then unmounting — from
-    // inserting the same session twice. `saved` is only set once the write has
-    // actually landed, so a failed transaction can still be retried on unmount
-    // rather than silently losing the session.
+    /*
+     * `saving` stops the second caller — stopping and then unmounting — from
+     * inserting the same session twice. `saved` is set only once the write has
+     * landed, so a rejected transaction can still be retried on unmount.
+     *
+     * That retry only works if `saving` is cleared on the way out as well as on
+     * success: leaving it set after a rejection blocks the retry just as surely
+     * as a wrongly-set `saved` did, and loses the session the same way. Hence
+     * the finally.
+     */
     current.saving = true
 
     const rows: WatchSegment[] = current.segments.map((segment) => ({
@@ -136,24 +142,27 @@ export function useWatch(applianceId: string): Watcher {
       createdAt: nowIso(),
     }))
 
-    await db.transaction('rw', [db.sessions, db.watchSegments], async () => {
-      await db.sessions.add({
-        id: current.id,
-        applianceId,
-        kind: 'watch',
-        startedAt: current.startedAt,
-        endedAt: nowIso(),
-        // Windows overlap by half, so each accepted one is a hop of genuinely
-        // new audio — not a whole window, and certainly not one second.
-        cleanSeconds: current.clean * HOP_SECONDS,
-        totalWindows: current.total,
-        discardedWindows: current.discarded,
-        statesDiscovered: null,
+    try {
+      await db.transaction('rw', [db.sessions, db.watchSegments], async () => {
+        await db.sessions.add({
+          id: current.id,
+          applianceId,
+          kind: 'watch',
+          startedAt: current.startedAt,
+          endedAt: nowIso(),
+          // Windows overlap by half, so each accepted one is a hop of genuinely
+          // new audio — not a whole window, and certainly not one second.
+          cleanSeconds: current.clean * HOP_SECONDS,
+          totalWindows: current.total,
+          discardedWindows: current.discarded,
+          statesDiscovered: null,
+        })
+        if (rows.length > 0) await db.watchSegments.bulkAdd(rows)
       })
-      if (rows.length > 0) await db.watchSegments.bulkAdd(rows)
-    })
-    current.saved = true
-    current.saving = false
+      current.saved = true
+    } finally {
+      current.saving = false
+    }
   }, [applianceId])
 
   const releaseWakeLock = useCallback(() => {
