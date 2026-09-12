@@ -36,10 +36,22 @@ export function Home(): ReactNode {
     <AppShell
       title={t('home.title')}
       actions={
-        <Link to="/settings" className="rounded-[var(--radius-pill)] p-2 hover:bg-bone">
-          <span aria-hidden="true">⚙</span>
-          <span className="sr-only">{t('nav.settings')}</span>
-        </Link>
+        <>
+          {/*
+           * Help sits on Home, not only inside Settings. Someone staring at a
+           * verdict they do not understand looks at the screen they are on;
+           * making them go hunting through settings for an explanation is how
+           * an app teaches people it has nothing to say.
+           */}
+          <Link to="/help" className="rounded-[var(--radius-pill)] p-2 hover:bg-bone">
+            <span aria-hidden="true">?</span>
+            <span className="sr-only">{t('nav.help')}</span>
+          </Link>
+          <Link to="/settings" className="rounded-[var(--radius-pill)] p-2 hover:bg-bone">
+            <span aria-hidden="true">⚙</span>
+            <span className="sr-only">{t('nav.settings')}</span>
+          </Link>
+        </>
       }
     >
       {overviews.length === 0 ? (

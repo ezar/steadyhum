@@ -21,7 +21,8 @@
     "home": "Inicio",
     "settings": "Ajustes",
     "privacy": "Privacidad",
-    "about": "Acerca de"
+    "about": "Acerca de",
+    "help": "Ayuda"
   },
   "status": {
     "learning": "Aprendiendo",
@@ -227,6 +228,64 @@
       "detail": "Después, cada comprobación son 30 segundos.",
       "wifi": "Al abrir la pantalla de aprendizaje se descargan unos 23 MB de modelos, antes de grabar nada. Mejor con wifi; luego funciona sin conexión.",
       "tip": "Para empezar, una nevera o una caldera va mejor que una lavadora: suenan estables. Una lavadora tiene fases muy distintas y conviene grabarlas todas."
+    },
+    "close": "Cerrar",
+    "done": "Cerrar"
+  },
+  "help": {
+    "title": "Ayuda",
+    "intro": "Las dudas que más aparecen, con la respuesta corta primero.",
+    "replayTitle": "Ver la introducción otra vez",
+    "replayBody": "Los tres paneles que salen la primera vez: qué hace, dónde va el sonido y qué te va a pedir.",
+    "replayAction": "Ver la introducción",
+    "privacyAction": "Leer la página de privacidad",
+    "q": {
+      "whatBroke": {
+        "q": "¿Por qué no me dice qué está roto?",
+        "a": "Porque no lo sabe, y decírtelo sería inventárselo. Desde el micrófono de un móvil se puede saber que una máquina ya no suena como sonaba; de ahí a nombrar la pieza averiada hay un salto que ningún modelo puede dar con honestidad.",
+        "b": "Lo que sí hace es decirte en qué se diferencia (más grave, más metálico, un golpeteo nuevo) para que tú, o un técnico, sepáis por dónde mirar."
+      },
+      "verdicts": {
+        "q": "¿Qué significa cada resultado?",
+        "a": "«Normal»: suena dentro de lo que aprendió. «Algo distinto»: se sale un poco de su normal, puede ser una fase que no grabaste. «Distinto»: se sale claramente. «No utilizable»: había demasiado ruido para poder decir nada.",
+        "b": "Ni «Algo distinto» ni «Distinto» significan avería. Significan cambio respecto a lo que tú le enseñaste."
+      },
+      "recording": {
+        "q": "¿Cómo grabo bien?",
+        "a": "Deja el móvil siempre en el mismo sitio, a la misma distancia. Ese es el factor que más cambia el resultado: si un día grabas pegado y otro desde la puerta, la comparación deja de valer.",
+        "b": "Con la máquina funcionando, sin hablar cerca y sin música ni tele de fondo. Y sin tapar el micrófono con la mano o con la mesa."
+      },
+      "unusable": {
+        "q": "Me dice «No he podido escuchar bien»",
+        "a": "Significa que más del 40 % de la grabación tenía ruido que no era la máquina: voces, música, un golpe. En vez de darte un resultado que no se sostiene, prefiere no dártelo.",
+        "b": "Repite la grabación en un momento más tranquilo."
+      },
+      "falseAlarm": {
+        "q": "Dice que suena distinto y yo la veo bien",
+        "a": "Puede pasar, sobre todo si la máquina tiene fases que no grabaste durante el aprendizaje: un motor que arranca, una bomba de desagüe, un ciclo de descongelado.",
+        "b": "Díselo con «En realidad está bien» en la pantalla del resultado. Eso ajusta el umbral de esa máquina. Si sabes que era una fase nueva, añade además una sesión de aprendizaje con la máquina en ese estado."
+      },
+      "levelGuard": {
+        "q": "Me avisa de que el móvil está más cerca o más lejos",
+        "a": "Ha detectado que el volumen general no cuadra con el del aprendizaje, y eso por sí solo puede disparar un falso aviso. No invalida la comprobación, pero conviene repetirla desde el sitio de siempre."
+      },
+      "changed": {
+        "q": "He cambiado algo de la máquina a propósito",
+        "a": "Si has cambiado el filtro, la has movido de sitio o le han hecho una reparación, su normal ya es otro. Añade sesiones de aprendizaje con el estado nuevo, o vuelve a aprender desde cero desde la ficha de la máquina."
+      },
+      "offline": {
+        "q": "¿Funciona sin conexión?",
+        "a": "Sí, una vez descargados los modelos. Esa descarga son unos 23 MB y ocurre al abrir por primera vez una pantalla que graba, antes de grabar nada; mejor hacerla con wifi.",
+        "b": "A partir de ahí no necesita internet: el análisis entero ocurre dentro del navegador."
+      },
+      "data": {
+        "q": "¿Dónde están mis datos?",
+        "a": "En este móvil, y en ningún otro sitio. No hay cuentas ni servidor. Lo que se guarda son números —el normal aprendido y el historial—, no sonido, salvo que actives tú los fragmentos de audio."
+      },
+      "gas": {
+        "q": "¿Me puedo fiar para algo serio?",
+        "a": "No. SteadyHum es una pista, no un diagnóstico, y no es un dispositivo de seguridad. Cualquier aparato de gas lo tiene que revisar un técnico certificado, huela raro o no, diga esta app lo que diga."
+      }
     }
   }
 }
