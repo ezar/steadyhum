@@ -139,7 +139,24 @@ export async function listen(
     onWindow(result)
   })
 
-  const capture = await createCapture({ workletUrl })
+  /*
+   * Anything that fails from here on must take the listener with it.
+   *
+   * The engine outlives every session — it is created once per tab — so a
+   * subscription left behind by a failed start is never collected. The next
+   * attempt then adds a second one, and both run: every window counted twice,
+   * the scorer and the segment tracker advanced twice. Opening the microphone
+   * is exactly where this fails in practice, since that is where the user can
+   * say no.
+   */
+  let capture: Awaited<ReturnType<typeof createCapture>>
+  try {
+    capture = await createCapture({ workletUrl })
+  } catch (error) {
+    offWindow()
+    throw error
+  }
+
   const offChunk = capture.onChunk((samples) => {
     void instance.push(samples)
   })

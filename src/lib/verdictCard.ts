@@ -165,13 +165,18 @@ export function drawVerdictCard(canvas: HTMLCanvasElement, data: VerdictCardData
   context.font = `30px ${FONT}`
   const noDifferenceLines =
     data.differences.length === 0 ? wrapText(context, data.noDifferences, inner) : []
+  context.font = `600 44px ${FONT}`
+  // Appliance names are user input with no length limit, so this wraps like
+  // everything else. Drawn on one line it simply ran off a 1080-pixel canvas
+  // and was clipped out of the exported image.
+  const nameLines = wrapText(context, data.applianceName, inner)
   context.font = `600 56px ${FONT}`
   const headlineLines = wrapText(context, data.headline, inner)
   context.font = `28px ${FONT}`
   const disclaimerLines = wrapText(context, data.disclaimer, inner)
 
   let height = PADDING
-  height += 44 + 16 // appliance name
+  height += nameLines.length * 56 + 4 // appliance name
   height += 32 + 40 // type and date
   height += 72 + 24 // status pill
   height += headlineLines.length * 68 + 16
@@ -198,12 +203,15 @@ export function drawVerdictCard(canvas: HTMLCanvasElement, data: VerdictCardData
   ctx.fillStyle = palette.paper
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-  let y = PADDING + 44
+  let y = PADDING
 
   ctx.fillStyle = palette.ink
   ctx.font = `600 44px ${FONT}`
-  ctx.fillText(data.applianceName, PADDING, y)
-  y += 16 + 32
+  for (const line of nameLines) {
+    y += 56
+    ctx.fillText(line, PADDING, y)
+  }
+  y += 4 + 32
 
   ctx.fillStyle = palette.inkFaint
   ctx.font = `28px ${FONT}`
