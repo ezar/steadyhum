@@ -10,7 +10,7 @@ returns plain serializable objects.
 The dependency is pinned to a release tag, never a branch:
 
 ```jsonc
-{ "dependencies": { "earshot": "github:ezar/earshot#v0.4.0" } }
+{ "dependencies": { "earshot": "github:ezar/earshot#v0.5.0" } }
 ```
 
 earshot ships TypeScript source — its `exports` point at `src/` — so there is no
