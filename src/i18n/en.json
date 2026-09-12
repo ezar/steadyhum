@@ -205,5 +205,28 @@
   "errors": {
     "notFound": "I cannot find that page.",
     "applianceNotFound": "That appliance no longer exists."
+  },
+  "welcome": {
+    "skip": "Skip",
+    "next": "Next",
+    "start": "Get started",
+    "step": "Step {current} of {total}",
+    "what": {
+      "title": "Your appliances have a normal.",
+      "body": "SteadyHum learns it by listening to your machine while it is fine, then tells you whether it still sounds the same.",
+      "honest": "It will not tell you what is broken. That would not be honest: nobody can know that from a phone microphone. What it does know is when something has changed, and how to describe it in words you can act on."
+    },
+    "privacy": {
+      "title": "Audio never leaves this phone.",
+      "body": "All the analysis happens right here, in the browser. There are no accounts, no server and nothing is uploaded.",
+      "detail": "What is stored is numbers, not sound: the learned normal of each machine and the history of checks. Audio clips are only kept if you turn them on."
+    },
+    "effort": {
+      "title": "It asks for a few minutes up front.",
+      "body": "Learning a machine’s normal takes 3 recordings while it is running, about 3 minutes in total. Without that there is nothing to compare against.",
+      "detail": "After that, each check is 30 seconds.",
+      "wifi": "The first recording downloads about 25 MB of models. Better on wifi; after that it works offline.",
+      "tip": "To start, a fridge or a boiler works better than a washing machine: they sound steady. A washing machine has very different phases and they all need recording."
+    }
   }
 }

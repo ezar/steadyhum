@@ -1,10 +1,12 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Link } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, Navigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
 
 import { listApplianceOverviews } from '@/db/repo.ts'
 import type { ApplianceOverview } from '@/db/repo.ts'
 import { useI18n } from '@/i18n/context.ts'
+import { useSettings } from '@/store/settings.ts'
 import { formatDate } from '@/lib/format.ts'
 import { AppShell } from '@/ui/AppShell.tsx'
 import { Button } from '@/ui/Button.tsx'
@@ -14,6 +16,21 @@ import { StatusChip } from '@/ui/StatusChip.tsx'
 export function Home(): ReactNode {
   const { t } = useI18n()
   const overviews = useLiveQuery(() => listApplianceOverviews(), [], undefined)
+  const onboarded = useSettings((state) => state.onboarded)
+  const setOnboarded = useSettings((state) => state.setOnboarded)
+
+  // Someone who already has appliances is not a new user — they were here
+  // before the introduction existed, or they imported a profile. Mark them
+  // onboarded rather than interrupting them with it.
+  const hasAppliances = overviews !== undefined && overviews.length > 0
+  useEffect(() => {
+    if (hasAppliances && !onboarded) setOnboarded(true)
+  }, [hasAppliances, onboarded, setOnboarded])
+
+  // Wait for the query: redirecting before it resolves would send an existing
+  // user to the introduction for a frame.
+  if (overviews === undefined) return null
+  if (!onboarded && overviews.length === 0) return <Navigate to="/welcome" replace />
 
   return (
     <AppShell
@@ -25,7 +42,7 @@ export function Home(): ReactNode {
         </Link>
       }
     >
-      {overviews === undefined ? null : overviews.length === 0 ? (
+      {overviews.length === 0 ? (
         <EmptyState />
       ) : (
         <div className="flex flex-col gap-3">

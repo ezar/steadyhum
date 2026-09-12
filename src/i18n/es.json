@@ -205,5 +205,28 @@
   "errors": {
     "notFound": "No encuentro esa página.",
     "applianceNotFound": "Ese electrodoméstico ya no existe."
+  },
+  "welcome": {
+    "skip": "Saltar",
+    "next": "Siguiente",
+    "start": "Empezar",
+    "step": "Paso {current} de {total}",
+    "what": {
+      "title": "Tus electrodomésticos tienen un sonido normal.",
+      "body": "SteadyHum lo aprende escuchando tu máquina cuando está bien, y luego te dice si sigue sonando igual.",
+      "honest": "No te va a decir qué está roto. Eso no sería honesto: nadie puede saberlo desde el micrófono de un móvil. Lo que sí sabe es cuándo algo ha cambiado, y describirlo con palabras que puedas usar."
+    },
+    "privacy": {
+      "title": "El sonido no sale de este móvil.",
+      "body": "Todo el análisis ocurre aquí dentro, en el navegador. No hay cuentas, no hay servidor y no se sube nada.",
+      "detail": "Lo que se guarda son números, no audio: el «normal» aprendido de cada máquina y el historial de comprobaciones. Los fragmentos de audio solo se guardan si los activas tú."
+    },
+    "effort": {
+      "title": "Te va a pedir unos minutos por adelantado.",
+      "body": "Para aprender el normal de una máquina hacen falta 3 grabaciones con ella funcionando, unos 3 minutos en total. Sin eso no hay nada con lo que comparar.",
+      "detail": "Después, cada comprobación son 30 segundos.",
+      "wifi": "La primera grabación descarga unos 25 MB de modelos. Mejor con wifi; luego funciona sin conexión.",
+      "tip": "Para empezar, una nevera o una caldera va mejor que una lavadora: suenan estables. Una lavadora tiene fases muy distintas y conviene grabarlas todas."
+    }
   }
 }
