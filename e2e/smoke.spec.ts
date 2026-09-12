@@ -80,6 +80,58 @@ test('the audio engine starts and produces analysis windows', async ({ page }) =
 
   await page.getByRole('button', { name: /terminar sesión|end session/i }).click()
   await expect(page.getByText(/1 (de|of) 3/)).toBeVisible({ timeout: 30_000 })
+
+  // The guards run inside the worker, which is what lets it skip the embedder
+  // for windows it rejects — over half the per-window cost, spent on
+  // embeddings the app throws away. Nothing on screen shows that, and dropping
+  // `guards` from createEngine would keep every test above green while
+  // silently costing that back, so assert it where it is observable: a window
+  // scored by the worker carries the worker's own verdict.
+  const verdicts = await page.evaluate(async () => {
+    /*
+     * These e2e files typecheck under the Node config, which has no DOM lib on
+     * purpose: vite.config.ts and scripts/ must not see browser globals. This
+     * callback is the exception — it runs in the page — so it describes the
+     * slice of IndexedDB it touches rather than widening the config for
+     * everything else.
+     */
+    interface Request<T> {
+      result: T
+      error: unknown
+      onsuccess: (() => void) | null
+      onerror: (() => void) | null
+    }
+    interface Database {
+      transaction: (
+        store: string,
+        mode: string,
+      ) => {
+        objectStore: (store: string) => { getAll: () => Request<{ window: { guard?: unknown } }[]> }
+      }
+    }
+    const open = <T>(request: Request<T>): Promise<T> =>
+      new Promise<T>((resolve, reject) => {
+        request.onsuccess = () => {
+          resolve(request.result)
+        }
+        request.onerror = () => {
+          reject(request.error instanceof Error ? request.error : new Error('IndexedDB failed'))
+        }
+      })
+
+    const factory = (
+      globalThis as unknown as { indexedDB: { open: (name: string) => Request<Database> } }
+    ).indexedDB
+    const db = await open(factory.open('steadyhum'))
+    const rows = await open(db.transaction('windows', 'readonly').objectStore('windows').getAll())
+    return {
+      total: rows.length,
+      fromWorker: rows.filter((row) => row.window.guard !== undefined).length,
+    }
+  })
+
+  expect(verdicts.total).toBeGreaterThan(0)
+  expect(verdicts.fromWorker).toBe(verdicts.total)
 })
 
 /**
