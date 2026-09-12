@@ -35,7 +35,13 @@
   "confidence": {
     "low": "baja",
     "medium": "media",
-    "high": "alta"
+    "high": "alta",
+    "label": "Confianza {level}",
+    "reason": {
+      "discarded": "Parte de la grabación tenía ruido y se ha descartado, así que he juzgado con menos sonido del que me gustaría.",
+      "level": "El móvil no sonaba a la misma distancia que cuando aprendí, y eso por sí solo puede cambiar el resultado.",
+      "enrollment": "Todavía he escuchado esta máquina lo justo. Con más sesiones de aprendizaje el aviso se vuelve más fino."
+    }
   },
   "applianceType": {
     "washing-machine": "Lavadora",
@@ -249,6 +255,11 @@
         "q": "¿Qué significa cada resultado?",
         "a": "«Normal»: suena dentro de lo que aprendió. «Algo distinto»: se sale un poco de su normal, puede ser una fase que no grabaste. «Distinto»: se sale claramente. «No utilizable»: había demasiado ruido para poder decir nada.",
         "b": "Ni «Algo distinto» ni «Distinto» significan avería. Significan cambio respecto a lo que tú le enseñaste."
+      },
+      "confidence": {
+        "q": "¿Qué es la «confianza» del resultado?",
+        "a": "Es cuánto me fío yo de ese veredicto concreto, no la probabilidad de que haya avería. Baja cuando parte de la grabación tenía ruido, cuando el móvil no estaba a la distancia de siempre, o cuando todavía he escuchado poco esa máquina.",
+        "b": "Me quedo siempre con el peor de los tres factores, no con la media: un buen aprendizaje no compensa una grabación medio descartada."
       },
       "recording": {
         "q": "¿Cómo grabo bien?",

@@ -116,7 +116,12 @@ export function Check(): ReactNode {
             </Button>
           </Card>
         ) : (
-          <Verdict applianceId={appliance.id} check={check} onRetry={handleStart} />
+          <Verdict
+            applianceId={appliance.id}
+            check={check}
+            enrollment={enrollment}
+            onRetry={handleStart}
+          />
         )}
       </div>
     </AppShell>

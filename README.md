@@ -25,7 +25,7 @@ descriptors all come from [`earshot`](https://github.com/ezar/earshot), the
 framework-agnostic engine shared with Meowlogue.
 
 The dependency is pinned to a release tag, never a branch:
-`"earshot": "github:ezar/earshot#v0.4.0"`.
+`"earshot": "github:ezar/earshot#v0.5.0"`.
 
 Two constraints come with it, both written up under `docs/decisions/`:
 `@mediapipe/tasks-audio` is pinned at exactly 0.10.21 because MediaPipe dropped
