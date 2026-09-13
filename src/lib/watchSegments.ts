@@ -33,6 +33,23 @@ export interface SegmentTracker {
 }
 
 /**
+ * Whether this window is part of an episode.
+ *
+ * Exported because the caller has to agree with the tracker about it: the
+ * windows kept to explain an episode are exactly the windows that opened and
+ * sustained it, and a second copy of this rule would eventually describe a
+ * different stretch of audio than the one the episode covers.
+ *
+ * Drift counts. Nothing sounds wrong in any single window of a slow climb,
+ * which is the whole reason drift is tracked separately — so a rule that only
+ * looked at `status` would hand `describeDifference` an empty set of windows
+ * for precisely the episodes hardest to explain.
+ */
+export function isAbnormal(tick: WatchTick): boolean {
+  return tick.status !== 'normal' || tick.drifting
+}
+
+/**
  * Collapses a stream of scored windows into episodes.
  *
  * An hour of watching is seven thousand scores, which is not something anyone
@@ -49,10 +66,6 @@ export function createSegmentTracker(graceSeconds = 5): SegmentTracker {
   let open: OpenSegment | null = null
   /** When the current segment last looked abnormal. Used for the grace period. */
   let lastAbnormalSeconds = 0
-
-  function isAbnormal(tick: WatchTick): boolean {
-    return tick.status !== 'normal' || tick.drifting
-  }
 
   function close(): OpenSegment | null {
     if (open === null) return null

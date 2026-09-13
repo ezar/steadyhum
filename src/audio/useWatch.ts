@@ -7,14 +7,14 @@ import { db } from '@/db/index.ts'
 import { getActiveProfile } from '@/db/repo.ts'
 import type { WatchSegment } from '@/db/schema.ts'
 import { newId, nowIso } from '@/lib/id.ts'
-import { createSegmentTracker } from '@/lib/watchSegments.ts'
-import type { OpenSegment, SegmentTracker } from '@/lib/watchSegments.ts'
+import { createEpisodeLog } from '@/lib/watchEpisodes.ts'
+import type { EpisodeLog, WatchEpisode } from '@/lib/watchEpisodes.ts'
 import { createTimeline } from '@/lib/watchTimeline.ts'
 import type { Timeline, TimelinePoint } from '@/lib/watchTimeline.ts'
 import { listen } from './engine.ts'
 import type { Listening } from './engine.ts'
 
-export type { TimelinePoint }
+export type { TimelinePoint, WatchEpisode }
 
 export interface WatchState {
   readonly watching: boolean
@@ -24,7 +24,7 @@ export interface WatchState {
   readonly drifting: boolean
   readonly levelDbfs: number | null
   readonly timeline: readonly TimelinePoint[]
-  readonly segments: readonly OpenSegment[]
+  readonly segments: readonly WatchEpisode[]
   /** True while the screen is actually being held awake, moment to moment. */
   readonly screenHeldAwake: boolean
   readonly error: string | null
@@ -58,7 +58,7 @@ interface WakeLockSentinel {
 interface SessionRecord {
   id: string
   startedAt: string
-  segments: OpenSegment[]
+  segments: WatchEpisode[]
   total: number
   clean: number
   discarded: number
@@ -78,8 +78,9 @@ interface SessionRecord {
  *
  * Windows are deliberately not retained: at a 1024-number embedding each, a two
  * hour session would hold about fifteen thousand of them for no reader. What is
- * kept is the segment log — the episodes — and the timeline, bounded by
- * construction.
+ * kept is the episode log and the timeline, both bounded by construction — the
+ * episode log does hold windows, but only those of the episode currently open,
+ * only a fixed number of them, and with the embeddings stripped.
  *
  * The session's own record lives in a ref rather than in React state, because
  * the two moments that must persist it — the stop button and unmounting — both
@@ -89,7 +90,7 @@ export function useWatch(applianceId: string): Watcher {
   const [state, setState] = useState<WatchState>(IDLE)
   const session = useRef<Listening | null>(null)
   const scorer = useRef<StreamScorer | null>(null)
-  const tracker = useRef<SegmentTracker | null>(null)
+  const episodes = useRef<EpisodeLog | null>(null)
   const record = useRef<SessionRecord | null>(null)
   const wakeLock = useRef<WakeLockSentinel | null>(null)
   const timeline = useRef<Timeline | null>(null)
@@ -140,6 +141,7 @@ export function useWatch(applianceId: string): Watcher {
         status: segment.status,
         dominantStateId: segment.dominantStateId,
         fromDrift: segment.fromDrift,
+        descriptors: segment.descriptors,
         createdAt: nowIso(),
       }))
 
@@ -206,7 +208,7 @@ export function useWatch(applianceId: string): Watcher {
     session.current = null
     releaseWakeLock()
 
-    const last = tracker.current?.finish() ?? null
+    const last = episodes.current?.finish() ?? null
     if (last !== null) record.current?.segments.push(last)
     const segments = [...(record.current?.segments ?? [])]
 
@@ -274,7 +276,7 @@ export function useWatch(applianceId: string): Watcher {
       if (stored === null) throw new Error('no active profile')
 
       scorer.current = createStreamScorer(stored.profile)
-      tracker.current = createSegmentTracker()
+      episodes.current = createEpisodeLog(stored.profile)
       timeline.current = createTimeline()
       await acquireWakeLock()
       if (token.current !== mine) {
@@ -285,10 +287,10 @@ export function useWatch(applianceId: string): Watcher {
       const active = await listen(
         (result) => {
           const engine = scorer.current
-          const segmenter = tracker.current
+          const log = episodes.current
           const strip = timeline.current
           const current = record.current
-          if (engine === null || segmenter === null || strip === null || current === null) return
+          if (engine === null || log === null || strip === null || current === null) return
 
           current.total += 1
           if (result.guard.accepted) current.clean += 1
@@ -306,13 +308,16 @@ export function useWatch(applianceId: string): Watcher {
           }
 
           const update = engine.push(result.window)
-          const closed = segmenter.push({
-            seconds: result.window.t,
-            smoothed: update.smoothed,
-            status: update.status,
-            dominantStateId: update.window.stateId,
-            drifting: update.drift.drifting,
-          })
+          const closed = log.push(
+            {
+              seconds: result.window.t,
+              smoothed: update.smoothed,
+              status: update.status,
+              dominantStateId: update.window.stateId,
+              drifting: update.drift.drifting,
+            },
+            result.window,
+          )
           if (closed !== null) current.segments.push(closed)
           const segments = [...current.segments]
           const points = strip.push({
@@ -354,6 +359,7 @@ export function useWatch(applianceId: string): Watcher {
        */
       record.current = null
       timeline.current = null
+      episodes.current = null
       // The screen shows its own sentence; this is for whoever is debugging.
       console.error('watch session failed to start', error)
       setState({ ...IDLE, error: error instanceof Error ? error.message : String(error) })
@@ -387,7 +393,7 @@ export function useWatch(applianceId: string): Watcher {
       const active = session.current
       session.current = null
 
-      const last = tracker.current?.finish() ?? null
+      const last = episodes.current?.finish() ?? null
       if (last !== null) record.current?.segments.push(last)
       void persist().catch((error: unknown) => {
         console.error('could not save the watch session', error)

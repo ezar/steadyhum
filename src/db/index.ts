@@ -45,7 +45,37 @@ export class SteadyHumDatabase extends Dexie {
     this.version(2).stores({
       watchSegments: 'id, sessionId, applianceId, [applianceId+createdAt], createdAt',
     })
+    /*
+     * Episodes gained their descriptors — how the machine differed, not just
+     * that it did.
+     *
+     * No index changes, so no `stores` call: Dexie carries the previous
+     * version's schema forward. The upgrade exists only to make the type true
+     * of every row. `WatchSegment.descriptors` is not optional, and a row
+     * written by version 2 has no such field, so without this backfill anything
+     * reading the table would be handed `undefined` by a type promising an
+     * array — the kind of lie that surfaces as a crash months later, in the one
+     * screen that finally reads the column.
+     */
+    this.version(3).upgrade(async (transaction) => {
+      await transaction
+        .table<UpgradingSegment>('watchSegments')
+        .toCollection()
+        .modify((segment) => {
+          segment.descriptors ??= []
+        })
+    })
   }
 }
+
+/**
+ * A watch segment as the version 3 upgrade finds it.
+ *
+ * `WatchSegment` describes rows written from version 3 onwards, where
+ * `descriptors` is present and readonly. Neither is true of what is on disk
+ * partway through the upgrade, which is the one place the field is both
+ * missing and about to be written.
+ */
+type UpgradingSegment = { descriptors?: WatchSegment['descriptors'] }
 
 export const db = new SteadyHumDatabase()

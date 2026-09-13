@@ -328,3 +328,37 @@ test('starts every recording from zero, not from where the last one ended', asyn
     expect(clock).toBeLessThan(1)
   }
 })
+
+/**
+ * Watch mode before there is anything to watch against.
+ *
+ * The screen is reachable by URL whether or not the machine has a learned
+ * normal, and what it does then is not a detail: the identical situation on
+ * this screen once surfaced an internal English sentence — "no active profile"
+ * — in the middle of a Spanish app. Nothing about that is visible to a
+ * typecheck, so it is checked in a browser or not at all.
+ */
+test('watch mode asks for a learned normal instead of offering to start', async ({ page }) => {
+  await skipIntroduction(page)
+
+  await page
+    .getByRole('link', { name: /añadir electrodoméstico|add appliance/i })
+    .first()
+    .click()
+  await page
+    .getByRole('radio', { name: /lavadora|washing machine/i })
+    .first()
+    .check({ force: true })
+  await page.getByRole('textbox').first().fill('Lavadora de prueba')
+  await page.getByRole('button', { name: /guardar electrodoméstico|save appliance/i }).click()
+  await expect(page).toHaveURL(/\/learn$/)
+
+  await page.goto(page.url().replace(/\/learn$/, '/watch'))
+
+  await expect(page.getByText(/primero enséñale a steadyhum|first teach steadyhum/i)).toBeVisible()
+  await expect(page.getByRole('button', { name: /empezar a vigilar|start watching/i })).toHaveCount(
+    0,
+  )
+  // And the copy the dictionaries hold, never the sentence the code throws.
+  await expect(page.getByText(/no active profile/i)).toHaveCount(0)
+})

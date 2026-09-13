@@ -3,12 +3,13 @@ import { Link, useParams } from 'react-router-dom'
 import type { ReactNode } from 'react'
 
 import { useWatch } from '@/audio/useWatch.ts'
-import type { Watcher } from '@/audio/useWatch.ts'
+import type { WatchEpisode, Watcher } from '@/audio/useWatch.ts'
 import { getActiveProfile, getApplianceOverview } from '@/db/repo.ts'
 import { useI18n } from '@/i18n/context.ts'
 import { formatDuration } from '@/lib/format.ts'
-import type { OpenSegment } from '@/lib/watchSegments.ts'
 import { Button } from '@/ui/Button.tsx'
+import { EpisodeList } from '@/ui/EpisodeList.tsx'
+import { DARK_STATUS_COLOUR } from '@/ui/statusColours.ts'
 import { WatchTimeline } from '@/ui/WatchTimeline.tsx'
 
 /**
@@ -64,7 +65,7 @@ function Live({ watcher }: { readonly watcher: Watcher }): ReactNode {
     <>
       <div className="flex flex-col gap-1">
         <p className="text-sm uppercase tracking-wide text-[#8d968f]">{t('watch.listening')}</p>
-        <p className="text-4xl font-semibold" style={{ color: STATUS_COLOUR[watcher.status] }}>
+        <p className="text-4xl font-semibold" style={{ color: DARK_STATUS_COLOUR[watcher.status] }}>
           {t(`status.${watcher.status}`)}
         </p>
         <p className="tabular text-[#c9c4bb]">
@@ -144,30 +145,12 @@ function Idle({ watcher }: { readonly watcher: Watcher }): ReactNode {
   )
 }
 
-function Segments({ segments }: { readonly segments: readonly OpenSegment[] }): ReactNode {
+function Segments({ segments }: { readonly segments: readonly WatchEpisode[] }): ReactNode {
   const { t } = useI18n()
   return (
     <div className="flex flex-col gap-2">
       <h3 className="font-medium">{t('watch.segments')}</h3>
-      {segments.length === 0 ? (
-        <p className="text-sm text-[#8d968f]">{t('watch.noSegments')}</p>
-      ) : (
-        <ul className="flex flex-col gap-1">
-          {segments.map((segment) => (
-            <li
-              key={`${segment.startSeconds}-${segment.endSeconds}`}
-              className="tabular text-sm"
-              style={{ color: STATUS_COLOUR[segment.status] }}
-            >
-              {t(segment.fromDrift ? 'watch.segmentDrift' : 'watch.segment', {
-                start: formatDuration(segment.startSeconds),
-                end: formatDuration(segment.endSeconds),
-                status: t(`status.${segment.status}`),
-              })}
-            </li>
-          ))}
-        </ul>
-      )}
+      <EpisodeList episodes={segments} emptyText={t('watch.noSegments')} />
     </div>
   )
 }
@@ -198,10 +181,4 @@ function Shell({
       <main className="flex flex-1 flex-col gap-5 px-4 py-5">{children}</main>
     </div>
   )
-}
-
-const STATUS_COLOUR: Readonly<Record<'normal' | 'watch' | 'anomalous', string>> = {
-  normal: '#5fae77',
-  watch: '#d9a53f',
-  anomalous: '#e0705a',
 }
