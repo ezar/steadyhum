@@ -44,6 +44,38 @@ describe('createSegmentTracker', () => {
     })
   })
 
+  it('names the state most of the episode was in, not the one it ended in', () => {
+    /*
+     * A machine with several states can change state mid-episode, and this
+     * field decides which learned normal the episode gets measured against.
+     * Carrying over the last window's state measures a wash against a spin's
+     * baseline, and the ordinary difference between two phases of healthy
+     * running is then reported as a confident finding about a fault.
+     */
+    const tracker = createSegmentTracker()
+    for (const seconds of [0, 1, 2, 3, 4]) {
+      tracker.push(abnormal(seconds, { dominantStateId: 'washing' }))
+    }
+    tracker.push(abnormal(5, { dominantStateId: 'spinning' }))
+
+    expect(tracker.open?.dominantStateId).toBe('washing')
+    expect(tracker.finish()?.dominantStateId).toBe('washing')
+  })
+
+  it("counts each episode's states afresh", () => {
+    // Otherwise a long first episode decides the state of every episode after
+    // it, and the later ones are measured against a normal they never matched.
+    const tracker = createSegmentTracker(1)
+    for (const seconds of [0, 1, 2, 3, 4]) {
+      tracker.push(abnormal(seconds, { dominantStateId: 'washing' }))
+    }
+    expect(tracker.push(tick(10))?.dominantStateId).toBe('washing')
+
+    tracker.push(abnormal(11, { dominantStateId: 'spinning' }))
+    tracker.push(abnormal(12, { dominantStateId: 'spinning' }))
+    expect(tracker.finish()?.dominantStateId).toBe('spinning')
+  })
+
   it('rides out a dip rather than splitting one episode in two', () => {
     // A machine sitting on the threshold flickers. Without the grace period
     // this reads as several separate events, which is the wrong story.
