@@ -110,7 +110,7 @@ export function createSegmentTracker(graceSeconds = 5): SegmentTracker {
                 ...open,
                 endSeconds: tick.seconds,
                 peakScore: Math.max(open.peakScore, tick.smoothed),
-                // Report the worst it got, not the state it happened to end in.
+                // The worst it got, not whichever reading it ended on.
                 status: worse(open.status, tick.status),
                 dominantStateId: dominant(windowsPerState),
                 /*
