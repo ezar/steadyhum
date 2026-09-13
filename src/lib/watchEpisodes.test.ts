@@ -46,29 +46,34 @@ function profile(): Profile {
     p05: mean - 2,
     p95: mean + 2,
   })
+  const state = (id: string, centroidHz: number) => ({
+    id,
+    model: { mean: [0], variance: [1] },
+    distances: { mean: 0, standardDeviation: 1, p50: 0, p95: 1, p99: 2 },
+    featureStats: {
+      level: stat(-40),
+      spectralCentroidHz: stat(centroidHz),
+      spectralFlatness: stat(0.5),
+      spectralFlux: stat(0.1),
+      onsetPeriodicity: stat(0.1),
+      amplitudeModulationHz: stat(5),
+      amplitudeModulationDepth: stat(0.2),
+      peakFrequencyHz: stat(100),
+      peakProminenceDb: stat(3),
+    },
+    weight: 0.5,
+  })
   return {
     schemaVersion: 1,
     revision: 1,
     featureSpace: 'embedding',
     dimensions: 1,
     states: [
-      {
-        id: 'state-0',
-        model: { mean: [0], variance: [1] },
-        distances: { mean: 0, standardDeviation: 1, p50: 0, p95: 1, p99: 2 },
-        featureStats: {
-          level: stat(-40),
-          spectralCentroidHz: stat(400),
-          spectralFlatness: stat(0.5),
-          spectralFlux: stat(0.1),
-          onsetPeriodicity: stat(0.1),
-          amplitudeModulationHz: stat(5),
-          amplitudeModulationDepth: stat(0.2),
-          peakFrequencyHz: stat(100),
-          peakProminenceDb: stat(3),
-        },
-        weight: 1,
-      },
+      state('state-0', 400),
+      // A second, much brighter normal. Real machines have several: a washing
+      // machine washes, drains and spins, and each sounds nothing like the
+      // others while all three are perfectly healthy.
+      state('state-1', 500),
     ],
     thresholds: { watch: 0.4, anomalous: 0.7 },
     windowCount: 400,
@@ -103,12 +108,12 @@ function windowAt(seconds: number, overrides: Partial<Record<string, number>> = 
   } as unknown as WindowResult
 }
 
-function tick(seconds: number, status: Status, drifting = false): WatchTick {
+function tick(seconds: number, status: Status, drifting = false, stateId = 'state-0'): WatchTick {
   return {
     seconds,
     smoothed: status === 'normal' ? 0.1 : status === 'watch' ? 0.5 : 0.9,
     status,
-    dominantStateId: 'state-0',
+    dominantStateId: stateId,
     drifting,
   }
 }
@@ -240,6 +245,57 @@ describe('createEpisodeLog', () => {
 
     // Described by its first windows this lands near 0; by its last, near 8.
     expect(z(episode?.descriptors ?? [], 'spectralCentroidHz')).toBeCloseTo(4, 1)
+  })
+
+  it('measures an episode that changed state against one state, not a blend', () => {
+    /*
+     * The failure this prevents is not a missing answer, it is a confident
+     * wrong one. Ten windows in the washing state, four in the spinning state
+     * whose normal is 100 Hz brighter: measured as one pool against the
+     * spinning baseline, the average lands 67 standard deviations below it and
+     * the app reports a dramatic fault in a machine doing exactly what it
+     * always does.
+     */
+    const log = createEpisodeLog(profile())
+    for (let index = 0; index < 10; index += 1) {
+      log.push(tick(index, 'anomalous'), windowAt(index, { spectralCentroidHz: 406 }))
+    }
+    for (let index = 10; index < 14; index += 1) {
+      log.push(
+        tick(index, 'anomalous', false, 'state-1'),
+        windowAt(index, { spectralCentroidHz: 500 }),
+      )
+    }
+    const episode = log.finish()
+
+    // The state most of the episode was in — not whichever it ended in.
+    expect(episode?.dominantStateId).toBe('state-0')
+    // And six standard deviations bright against that state's own normal.
+    expect(z(episode?.descriptors ?? [], 'spectralCentroidHz')).toBeCloseTo(6, 5)
+  })
+
+  it("says nothing rather than describe one state with another state's windows", () => {
+    /*
+     * The sample thins itself as an episode runs on, so the dominant state can
+     * end up with no window left in it. Falling back to the windows that are
+     * there means measuring one state against another's baseline — the very
+     * thing the filter exists to prevent — so the answer has to be silence.
+     *
+     * A sample of one makes this exact: it only ever keeps the first window,
+     * which here belongs to the state that does not dominate.
+     */
+    const log = createEpisodeLog(profile(), 1)
+    log.push(tick(0, 'anomalous'), windowAt(0, { spectralCentroidHz: 406 }))
+    for (let index = 1; index < 6; index += 1) {
+      log.push(
+        tick(index, 'anomalous', false, 'state-1'),
+        windowAt(index, { spectralCentroidHz: 500 }),
+      )
+    }
+    const episode = log.finish()
+
+    expect(episode?.dominantStateId).toBe('state-1')
+    expect(episode?.descriptors).toEqual([])
   })
 
   it('reports nothing when no feature moved far enough to be worth saying', () => {

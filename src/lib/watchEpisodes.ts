@@ -18,6 +18,12 @@ export interface WatchEpisode extends OpenSegment {
   readonly descriptors: readonly Descriptor[]
 }
 
+/** A sampled window, kept with the state it matched. */
+interface StatedWindow {
+  readonly stateId: string
+  readonly window: WindowResult
+}
+
 export interface EpisodeLog {
   /** Feed one scored window; returns an episode if this window ended one. */
   push: (tick: WatchTick, window: WindowResult) => WatchEpisode | null
@@ -54,7 +60,7 @@ export function createEpisodeLog(
   sampleWindows: number = EPISODE_SAMPLE_WINDOWS,
 ): EpisodeLog {
   const tracker = createSegmentTracker()
-  const sample = createUniformSample<WindowResult>(sampleWindows)
+  const sample = createUniformSample<StatedWindow>(sampleWindows)
 
   /**
    * Close a segment, describing it from the windows it was made of.
@@ -66,7 +72,21 @@ export function createEpisodeLog(
    */
   function close(segment: OpenSegment | null): WatchEpisode | null {
     if (segment === null) return null
-    const windows = sample.take()
+    /*
+     * Only the windows that matched the state being described.
+     *
+     * `describeDifference` measures against exactly one state's baseline, and
+     * a machine with several states can change state mid-episode — a washing
+     * machine washes, then drains, then spins. Handing it every window of the
+     * episode measures the drain against the spin's normal, and the ordinary
+     * difference between two phases of healthy running comes back as a
+     * confident finding about a fault. Silence would be better than that; the
+     * dominant state's own windows are better still.
+     */
+    const windows = sample
+      .take()
+      .filter((sampled) => sampled.stateId === segment.dominantStateId)
+      .map((sampled) => sampled.window)
     if (windows.length === 0) return { ...segment, descriptors: [] }
     return {
       ...segment,
@@ -90,7 +110,9 @@ export function createEpisodeLog(
        * the windows describing an episode and the episode's own span talking
        * about the same stretch of audio.
        */
-      if (isAbnormal(tick)) sample.push(forDescriptors(window))
+      if (isAbnormal(tick)) {
+        sample.push({ stateId: tick.dominantStateId, window: forDescriptors(window) })
+      }
       return close(tracker.push(tick))
     },
     finish(): WatchEpisode | null {
