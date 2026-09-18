@@ -25,9 +25,7 @@ export function DescriptorList({
         return (
           <li key={descriptor.feature} className="flex flex-col gap-0.5">
             <span>{sentence}</span>
-            <span className="tabular text-sm text-ink-faint">
-              {describeDetail(descriptor, t)}
-            </span>
+            <span className="tabular text-sm text-ink-faint">{describeDetail(descriptor, t)}</span>
           </li>
         )
       })}
