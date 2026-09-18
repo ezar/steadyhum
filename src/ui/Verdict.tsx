@@ -24,6 +24,7 @@ export function Verdict({
   applianceType,
   check,
   enrollment,
+  stateIds,
   onRetry,
 }: {
   readonly applianceId: string
@@ -31,6 +32,8 @@ export function Verdict({
   readonly applianceType: string
   readonly check: StoredCheck
   readonly enrollment: EnrollmentProgress
+  /** The learned states, in profile order, for numbering the matched one. */
+  readonly stateIds: readonly string[]
   readonly onRetry: () => void
 }): ReactNode {
   const { t } = useI18n()
@@ -73,8 +76,17 @@ export function Verdict({
         {confidence.reason !== null && (
           <p className="text-sm text-ink-faint">{t(`confidence.reason.${confidence.reason}`)}</p>
         )}
-        <p className="tabular text-sm text-ink-faint">
-          {t('verdict.matchedState', { state: check.dominantStateId })}
+        {/*
+         * Number the state rather than name it. earshot's ids are `s0`, `s1`:
+         * internal handles that mean nothing to the reader, and a real check
+         * put "Se parece al estado s0" on screen. A machine with one learned
+         * state has no state to pick out at all, so it gets its own sentence.
+         */}
+        <p className="text-sm text-ink-faint">
+          {t('verdict.matchedState', {
+            state: stateIds.indexOf(check.dominantStateId) + 1,
+            count: stateIds.length,
+          })}
         </p>
         {Math.abs(check.levelDeltaDb) > LEVEL_GUARD_DB && (
           <p className="text-slight">{t('verdict.levelGuard')}</p>

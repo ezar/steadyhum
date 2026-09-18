@@ -118,7 +118,7 @@
     "normal": "It sounds like it always does.",
     "unusable": "I could not listen properly.",
     "unusableBody": "There was too much background noise in more than 40% of the recording. Try again somewhere quieter.",
-    "matchedState": "This matches state {state} of the ones I learned.",
+    "matchedState": "This matches state {state} of the {count} I learned.",
     "addSession": "Add a learning session",
     "levelGuard": "The phone seems closer or farther than during learning.",
     "howItDiffers": "How it differs",
@@ -134,7 +134,8 @@
     "comparedWith": "Compared with the normal learned on {date}",
     "watch": "It sounds slightly different.",
     "anomalous": "It sounds different.",
-    "newState": "This may be a phase I never heard during learning. If the machine was doing something new, add a session."
+    "newState": "This may be a phase I never heard during learning. If the machine was doing something new, add a session.",
+    "matchedState_one": "This matches the one state I learned."
   },
   "descriptor": {
     "level": {
@@ -173,7 +174,17 @@
       "higher": "A whine or squeal stands out more than usual.",
       "lower": "The usual whine stands out less."
     },
-    "detail": "{value} {unit} against the usual {reference} {unit}"
+    "detail": "{value} {unit} against the usual {reference} {unit}",
+    "band": {
+      "higher": "The sound carries more weight in the {zone} range ({band}) than usual.",
+      "lower": "The sound carries less weight in the {zone} range ({band}) than usual."
+    },
+    "zone": {
+      "low": "low",
+      "mid": "mid",
+      "high": "high"
+    },
+    "detailPlain": "{value} against the usual {reference}"
   },
   "engine": {
     "title": "The audio engine is not available yet",
@@ -213,7 +224,9 @@
   },
   "errors": {
     "notFound": "I cannot find that page.",
-    "applianceNotFound": "That appliance no longer exists."
+    "applianceNotFound": "That appliance no longer exists.",
+    "checkFailed": "I could not compare this recording with its normal. Please try again.",
+    "recordingFailed": "I could not start recording. Check the microphone permission and try again."
   },
   "welcome": {
     "skip": "Skip",
@@ -335,6 +348,7 @@
     "summaryCount_one": "1 episode outside its normal.",
     "again": "Watch again",
     "honest": "An episode means it sounded different, not that something is broken.",
-    "failed": "I could not start watching. Check the microphone permission and try again."
+    "failed": "I could not start watching. Check the microphone permission and try again.",
+    "episodeOpen": "An episode is happening right now. I will sum it up when it ends."
   }
 }

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 
 import type { TimelinePoint } from '@/audio/useWatch.ts'
+import { DARK_STATUS_COLOUR } from './statusColours.ts'
 
 /**
  * The session so far, as one strip.
@@ -41,20 +42,10 @@ export function WatchTimeline({
             y={height - bar}
             width={1}
             height={bar}
-            fill={COLOURS[point.status]}
+            fill={DARK_STATUS_COLOUR[point.status]}
           />
         )
       })}
     </svg>
   )
-}
-
-/**
- * Brighter than the light-theme chips: on a dark strip the soft tones the app
- * uses elsewhere disappear.
- */
-const COLOURS: Readonly<Record<TimelinePoint['status'], string>> = {
-  normal: '#5fae77',
-  watch: '#d9a53f',
-  anomalous: '#e0705a',
 }

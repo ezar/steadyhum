@@ -7,7 +7,7 @@ import type { GuardedWindow } from '@/audio/engine.ts'
 import { useEngineAvailability } from '@/audio/useEngineAvailability.ts'
 import { useRecorder } from '@/audio/useRecorder.ts'
 import { saveCheck } from '@/db/record.ts'
-import { getApplianceOverview } from '@/db/repo.ts'
+import { getActiveProfile, getApplianceOverview } from '@/db/repo.ts'
 import { CHECK_SECONDS } from '@/db/schema.ts'
 import type { StoredCheck } from '@/db/schema.ts'
 import { useI18n } from '@/i18n/context.ts'
@@ -26,6 +26,12 @@ export function Check(): ReactNode {
   const { applianceId = '' } = useParams()
   const availability = useEngineAvailability()
   const overview = useLiveQuery(() => getApplianceOverview(applianceId), [applianceId], undefined)
+  /*
+   * Gate on the profile itself, not on enrolment progress, for the reason
+   * Watch does: the two can disagree, and then the screen offers a comparison
+   * it has nothing to compare against.
+   */
+  const profile = useLiveQuery(() => getActiveProfile(applianceId), [applianceId], undefined)
   const [startedAt, setStartedAt] = useState(nowIso)
   const [check, setCheck] = useState<StoredCheck | null>(null)
   const [scoring, setScoring] = useState(false)
@@ -43,15 +49,18 @@ export function Check(): ReactNode {
         })
         .catch((error: unknown) => {
           setScoring(false)
-          setFailure(error instanceof Error ? error.message : String(error))
+          // Show a sentence the reader can act on, not the developer's, which
+          // is English and about internals. The detail goes to the console.
+          console.error('check failed', error)
+          setFailure(t('errors.checkFailed'))
         })
     },
-    [applianceId, startedAt],
+    [applianceId, startedAt, t],
   )
 
   const recorder = useRecorder({ maxSeconds: CHECK_SECONDS, onFinished })
 
-  if (overview === undefined) return null
+  if (overview === undefined || profile === undefined) return null
   if (overview === null) {
     return (
       <AppShell title={t('errors.applianceNotFound')} back="/">
@@ -62,7 +71,7 @@ export function Check(): ReactNode {
 
   const { appliance, enrollment } = overview
 
-  if (!enrollment.learned) {
+  if (profile === null) {
     return (
       <AppShell title={t('check.title')} back={`/appliances/${appliance.id}`}>
         <Card className="flex flex-col gap-3">
@@ -102,9 +111,9 @@ export function Check(): ReactNode {
               <LevelMeter levelDbfs={recorder.recording ? recorder.levelDbfs : null} />
             </div>
             {recorder.recording && <GuardHint reasons={recorder.rejectedFor} />}
-            {(recorder.error ?? failure) !== null && (
+            {(recorder.failed || failure !== null) && (
               <p role="alert" className="text-sm text-different">
-                {recorder.error ?? failure}
+                {recorder.failed ? t('errors.recordingFailed') : failure}
               </p>
             )}
             <Button
@@ -122,6 +131,7 @@ export function Check(): ReactNode {
             applianceType={t(`applianceType.${appliance.type}`)}
             check={check}
             enrollment={enrollment}
+            stateIds={profile.profile.states.map((state) => state.id)}
             onRetry={handleStart}
           />
         )}

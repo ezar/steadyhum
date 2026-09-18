@@ -118,7 +118,7 @@
     "normal": "Suena como siempre.",
     "unusable": "No he podido escuchar bien.",
     "unusableBody": "Había demasiado ruido de fondo en más del 40 % de la grabación. Prueba otra vez con menos ruido.",
-    "matchedState": "Se parece al estado {state} de los que aprendí.",
+    "matchedState": "Se parece al estado {state} de los {count} que aprendí.",
     "addSession": "Añadir sesión de aprendizaje",
     "levelGuard": "El móvil parece estar más cerca o más lejos que cuando aprendí.",
     "howItDiffers": "En qué se diferencia",
@@ -134,7 +134,8 @@
     "comparedWith": "Comparado con el normal aprendido el {date}",
     "watch": "Suena algo distinto.",
     "anomalous": "Suena distinto.",
-    "newState": "Puede que sea una fase que no escuché durante el aprendizaje. Si la máquina estaba haciendo algo nuevo, añade una sesión."
+    "newState": "Puede que sea una fase que no escuché durante el aprendizaje. Si la máquina estaba haciendo algo nuevo, añade una sesión.",
+    "matchedState_one": "Se parece al único estado que aprendí."
   },
   "descriptor": {
     "level": {
@@ -173,7 +174,17 @@
       "higher": "Destaca más un silbido o chirrido sobre el resto.",
       "lower": "El silbido habitual destaca menos."
     },
-    "detail": "{value} {unit} frente a {reference} {unit} de costumbre"
+    "detail": "{value} {unit} frente a {reference} {unit} de costumbre",
+    "band": {
+      "higher": "El sonido carga más en la zona {zone} ({band}) que de costumbre.",
+      "lower": "El sonido carga menos en la zona {zone} ({band}) que de costumbre."
+    },
+    "zone": {
+      "low": "grave",
+      "mid": "media",
+      "high": "aguda"
+    },
+    "detailPlain": "{value} frente a {reference} de costumbre"
   },
   "engine": {
     "title": "El motor de audio todavía no está disponible",
@@ -213,7 +224,9 @@
   },
   "errors": {
     "notFound": "No encuentro esa página.",
-    "applianceNotFound": "Ese electrodoméstico ya no existe."
+    "applianceNotFound": "Ese electrodoméstico ya no existe.",
+    "checkFailed": "No he podido comparar esta grabación con su normal. Vuelve a intentarlo.",
+    "recordingFailed": "No he podido empezar a grabar. Comprueba el permiso del micrófono y vuelve a intentarlo."
   },
   "welcome": {
     "skip": "Saltar",
@@ -335,6 +348,7 @@
     "summaryCount_one": "1 episodio fuera de lo normal.",
     "again": "Vigilar otra vez",
     "honest": "Un episodio significa que sonó distinto, no que haya una avería.",
-    "failed": "No he podido empezar a vigilar. Comprueba el permiso del micrófono y vuelve a intentarlo."
+    "failed": "No he podido empezar a vigilar. Comprueba el permiso del micrófono y vuelve a intentarlo.",
+    "episodeOpen": "Hay un episodio en curso ahora mismo. Te lo resumo cuando termine."
   }
 }

@@ -19,6 +19,17 @@ export interface OpenSegment {
   readonly endSeconds: number
   readonly peakScore: number
   readonly status: Status
+  /**
+   * The learned state most of its windows matched.
+   *
+   * Counted, not carried over from the last window. A machine with several
+   * states — a washing machine washes, drains and spins — can change state
+   * partway through an episode, and this names the baseline the episode is
+   * measured and described against. Naming whichever state it happened to end
+   * in measures the whole episode against the wrong normal, and the result of
+   * that is not a missing answer but a confident description of a difference
+   * that was never there.
+   */
   readonly dominantStateId: string
   readonly fromDrift: boolean
 }
@@ -30,6 +41,23 @@ export interface SegmentTracker {
   readonly open: OpenSegment | null
   /** Close whatever is open, at the end of the session. */
   finish: () => OpenSegment | null
+}
+
+/**
+ * Whether this window is part of an episode.
+ *
+ * Exported because the caller has to agree with the tracker about it: the
+ * windows kept to explain an episode are exactly the windows that opened and
+ * sustained it, and a second copy of this rule would eventually describe a
+ * different stretch of audio than the one the episode covers.
+ *
+ * Drift counts. Nothing sounds wrong in any single window of a slow climb,
+ * which is the whole reason drift is tracked separately — so a rule that only
+ * looked at `status` would hand `describeDifference` an empty set of windows
+ * for precisely the episodes hardest to explain.
+ */
+export function isAbnormal(tick: WatchTick): boolean {
+  return tick.status !== 'normal' || tick.drifting
 }
 
 /**
@@ -49,10 +77,8 @@ export function createSegmentTracker(graceSeconds = 5): SegmentTracker {
   let open: OpenSegment | null = null
   /** When the current segment last looked abnormal. Used for the grace period. */
   let lastAbnormalSeconds = 0
-
-  function isAbnormal(tick: WatchTick): boolean {
-    return tick.status !== 'normal' || tick.drifting
-  }
+  /** How many of the open segment's windows matched each state. */
+  let windowsPerState = new Map<string, number>()
 
   function close(): OpenSegment | null {
     if (open === null) return null
@@ -65,6 +91,11 @@ export function createSegmentTracker(graceSeconds = 5): SegmentTracker {
     push(tick: WatchTick): OpenSegment | null {
       if (isAbnormal(tick)) {
         lastAbnormalSeconds = tick.seconds
+        if (open === null) windowsPerState = new Map()
+        windowsPerState.set(
+          tick.dominantStateId,
+          (windowsPerState.get(tick.dominantStateId) ?? 0) + 1,
+        )
         open =
           open === null
             ? {
@@ -79,9 +110,9 @@ export function createSegmentTracker(graceSeconds = 5): SegmentTracker {
                 ...open,
                 endSeconds: tick.seconds,
                 peakScore: Math.max(open.peakScore, tick.smoothed),
-                // Report the worst it got, not the state it happened to end in.
+                // The worst it got, not whichever reading it ended on.
                 status: worse(open.status, tick.status),
-                dominantStateId: tick.dominantStateId,
+                dominantStateId: dominant(windowsPerState),
                 /*
                  * Drift is the claim "nothing sounds wrong, the baseline is
                  * climbing". The moment something does sound wrong the label
@@ -112,4 +143,17 @@ const SEVERITY: Readonly<Record<Status, number>> = { normal: 0, watch: 1, anomal
 
 function worse(a: Status, b: Status): Status {
   return SEVERITY[b] > SEVERITY[a] ? b : a
+}
+
+/** The state with the most windows; ties go to whichever was seen first. */
+function dominant(windowsPerState: ReadonlyMap<string, number>): string {
+  let best = ''
+  let bestCount = -1
+  for (const [stateId, count] of windowsPerState) {
+    if (count > bestCount) {
+      best = stateId
+      bestCount = count
+    }
+  }
+  return best
 }

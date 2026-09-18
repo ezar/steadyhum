@@ -168,6 +168,16 @@ export interface WatchSegment {
   readonly dominantStateId: string
   /** True when the segment was opened by slow drift rather than a spike. */
   readonly fromDrift: boolean
+  /**
+   * How it differed from the learned normal, worst first. Often empty.
+   *
+   * An episode says *that* something changed; these say as much about *how* as
+   * can honestly be said — which band moved, in which direction, by how much.
+   * Empty is a real answer and a common one: earshot only reports a feature
+   * that moved more than 1.5 standard deviations, so an episode can be plainly
+   * above normal without any single interpretable feature standing out.
+   */
+  readonly descriptors: readonly Descriptor[]
   readonly createdAt: string
 }
 
