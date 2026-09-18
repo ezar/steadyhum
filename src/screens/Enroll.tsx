@@ -30,20 +30,22 @@ export function Enroll(): ReactNode {
   const overview = useLiveQuery(() => getApplianceOverview(applianceId), [applianceId], undefined)
   const [startedAt, setStartedAt] = useState(nowIso)
   const [statesDiscovered, setStatesDiscovered] = useState<number | null>(null)
-  const [failure, setFailure] = useState<string | null>(null)
+  const [failure, setFailure] = useState(false)
 
   const onFinished = useCallback(
     (windows: readonly GuardedWindow[]) => {
       if (windows.length === 0) return
-      setFailure(null)
+      setFailure(false)
       void saveEnrollmentSession(applianceId, windows, startedAt)
         .then((outcome) => {
           setStatesDiscovered(outcome.statesDiscovered)
         })
         .catch((error: unknown) => {
           // Learning can legitimately fail — too few distinct windows, for one.
-          // Saying so beats a screen that silently never reaches "learned".
-          setFailure(error instanceof Error ? error.message : String(error))
+          // Saying so beats a screen that silently never reaches "learned", but
+          // say it in the reader's language; the detail goes to the console.
+          console.error('learning failed', error)
+          setFailure(true)
         })
     },
     [applianceId, startedAt],
@@ -96,9 +98,9 @@ export function Enroll(): ReactNode {
               {t('engine.processingFlags')}
             </p>
           )}
-          {recorder.error !== null && (
+          {recorder.failed && (
             <p role="alert" className="text-sm text-different">
-              {recorder.error}
+              {t('errors.recordingFailed')}
             </p>
           )}
           <Button
@@ -116,12 +118,11 @@ export function Enroll(): ReactNode {
           </Card>
         )}
 
-        {failure !== null && (
+        {failure && (
           <Card>
             <p role="alert" className="text-different">
               {t('enroll.learnFailed')}
             </p>
-            <p className="mt-1 text-sm text-ink-faint">{failure}</p>
           </Card>
         )}
 

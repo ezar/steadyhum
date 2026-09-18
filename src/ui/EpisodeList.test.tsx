@@ -76,15 +76,27 @@ describe('EpisodeList', () => {
     expect(container.querySelectorAll('ul')).toHaveLength(1)
   })
 
-  it("falls back to earshot's own words for a feature nothing here phrases", () => {
-    // Better an English sentence about a real difference than silence about
-    // it. earshot invents a descriptor per frequency band, so this will happen.
+  it('phrases a frequency band in Spanish, keeping the frequency', () => {
+    // earshot invents one descriptor per octave band, and a real check on a
+    // washing machine reported one as its strongest difference. It used to
+    // reach the screen in English.
     const band = descriptor({
       feature: 'band2000Hz',
       text: 'The 2 kHz band is louder than usual, by 11 dB.',
     })
     render(<EpisodeList episodes={[episode({ descriptors: [band] })]} emptyText="nada" />)
-    expect(screen.getByText(/2 kHz band/)).toBeInTheDocument()
+    expect(screen.getByText(/zona aguda \(2 kHz\)/)).toBeInTheDocument()
+    expect(screen.queryByText(/band is louder/)).not.toBeInTheDocument()
+  })
+
+  it("falls back to earshot's own words for a feature nothing here phrases", () => {
+    // Better an English sentence about a real difference than silence about it.
+    const unknown = descriptor({
+      feature: 'somethingEarshotAddedLater',
+      text: 'Widget wobble is higher than usual, by 3.',
+    })
+    render(<EpisodeList episodes={[episode({ descriptors: [unknown] })]} emptyText="nada" />)
+    expect(screen.getByText(/Widget wobble/)).toBeInTheDocument()
   })
 
   it('shows the empty line it was given when there is nothing to list', () => {

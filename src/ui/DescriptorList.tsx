@@ -2,7 +2,7 @@ import type { Descriptor } from 'earshot'
 import type { ReactNode } from 'react'
 
 import { useI18n } from '@/i18n/context.ts'
-import { describeDescriptor, roundForDisplay } from '@/lib/describeDescriptor.ts'
+import { describeDescriptor, describeDetail } from '@/lib/describeDescriptor.ts'
 
 /**
  * How the check differs, in the user's language.
@@ -26,11 +26,7 @@ export function DescriptorList({
           <li key={descriptor.feature} className="flex flex-col gap-0.5">
             <span>{sentence}</span>
             <span className="tabular text-sm text-ink-faint">
-              {t('descriptor.detail', {
-                value: roundForDisplay(descriptor.value),
-                reference: roundForDisplay(descriptor.reference),
-                unit: descriptor.unit,
-              })}
+              {describeDetail(descriptor, t)}
             </span>
           </li>
         )

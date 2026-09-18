@@ -18,7 +18,14 @@ export interface RecorderState {
   readonly rejectedFor: readonly GuardReason[]
   /** Constraints the browser kept on despite being asked to turn them off. */
   readonly unhonouredConstraints: readonly string[]
-  readonly error: string | null
+  /**
+   * True when the microphone or the engine refused to start.
+   *
+   * A flag, not a message: the underlying text is a developer's sentence in
+   * English about internals, and two screens used to render it straight at the
+   * reader. The detail goes to the console; the screens supply the copy.
+   */
+  readonly failed: boolean
 }
 
 const IDLE: RecorderState = {
@@ -28,7 +35,7 @@ const IDLE: RecorderState = {
   levelDbfs: null,
   rejectedFor: [],
   unhonouredConstraints: [],
-  error: null,
+  failed: false,
 }
 
 export interface Recorder extends RecorderState {
@@ -102,10 +109,8 @@ export function useRecorder({
         }))
       })
       .catch((error: unknown) => {
-        setState({
-          ...IDLE,
-          error: error instanceof Error ? error.message : String(error),
-        })
+        console.error('recording failed to start', error)
+        setState({ ...IDLE, failed: true })
       })
   }, [])
 

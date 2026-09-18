@@ -86,7 +86,16 @@ function Live({ watcher }: { readonly watcher: Watcher }): ReactNode {
         </p>
       )}
 
-      <Segments segments={watcher.segments} />
+      {/*
+       * An episode is only listed once it closes, because its descriptors are
+       * drawn from the whole of it. While one is running the list would say
+       * "nothing to report" under a timeline that is solid red — so say what is
+       * actually happening instead.
+       */}
+      <Segments
+        segments={watcher.segments}
+        emptyText={watcher.status === 'normal' ? t('watch.noSegments') : t('watch.episodeOpen')}
+      />
 
       <p className="text-sm text-[#8d968f]">
         {watcher.screenHeldAwake ? t('watch.screenAwake') : t('watch.screenMaySleep')}
@@ -145,12 +154,18 @@ function Idle({ watcher }: { readonly watcher: Watcher }): ReactNode {
   )
 }
 
-function Segments({ segments }: { readonly segments: readonly WatchEpisode[] }): ReactNode {
+function Segments({
+  segments,
+  emptyText,
+}: {
+  readonly segments: readonly WatchEpisode[]
+  readonly emptyText?: string
+}): ReactNode {
   const { t } = useI18n()
   return (
     <div className="flex flex-col gap-2">
       <h3 className="font-medium">{t('watch.segments')}</h3>
-      <EpisodeList episodes={segments} emptyText={t('watch.noSegments')} />
+      <EpisodeList episodes={segments} emptyText={emptyText ?? t('watch.noSegments')} />
     </div>
   )
 }
